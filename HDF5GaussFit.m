@@ -1,4 +1,7 @@
 function [outVarNames,outVarVals,outVarUnits] = HDF5GaussFit( filename, pixSize,pixSizeUnits)
+    %function which will take an HDF5 file containing three images:
+    %absorption, probe and background and will fit a gaussian to the
+    %processed=log((absoprtion-background)/(probe-background)) image
 
     %Grab the images from file
     absorption = double(h5read(filename,'/Images/Absorption'));
