@@ -1,4 +1,4 @@
-function [] = autorun(filename,fitType,writeVarsToFile,parseInform)
+function [] = autorun(filename,fitType,writeCalcVarsToFile,parseInform)
     %autorun function which should be called each time imaging data is
     %collected
 
@@ -14,7 +14,7 @@ function [] = autorun(filename,fitType,writeVarsToFile,parseInform)
     end
     
     %Write variables gathered from fit to file if necessary
-    if writeVarsToFile && fitDone
+    if writeCalcVarsToFile && fitDone
         numVars = length(outVarNames);
         for i = 1:numVars;
             calcVarName = sprintf('/Calculated Values/%s',char(outVarNames(i)));

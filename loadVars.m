@@ -5,13 +5,13 @@ function [ varStruct ] = loadVars(filename)
     varStruct = struct;
     
     %grab calulated values from file
-    dumCalc = h5info(filename,'/Calculated Values');
-    numCalcVars = length(dumCalc.Datasets);
-    for i = 1:numCalcVars
-        calcVarName = char(dumCalc.Datasets(i).Name);
-        calcVarValue = h5read(filename,sprintf('/Calculated Values/%s',calcVarName));
-        varStruct.(calcVarName) = calcVarValue;
-    end
+%     dumCalc = h5info(filename,'/Calculated Values');
+%     numCalcVars = length(dumCalc.Datasets);
+%     for i = 1:numCalcVars
+%         calcVarName = char(dumCalc.Datasets(i).Name);
+%         calcVarValue = h5read(filename,sprintf('/Calculated Values/%s',calcVarName));
+%         varStruct.(calcVarName) = calcVarValue;
+%     end
     
     %grab control variables from file
     dumExp = h5info(filename,'/Control Variables');
