@@ -159,17 +159,14 @@ switch fitType
         fit = absGaussFit;
         fit.setProcessedImage(handles.processedImage);
         manCords = get(handles.centreSelection,'Value');
-        procImageSize = size(handles.processedImage);
-        scaleY = procImageSize(2)/1080;
-        scaleX = procImageSize(1)/1080;
         switch manCords
             case 1
                 fit.findCentreCoordinates
-                [dummyCentreX,dummyCentreY] = fit.getCentreCoordinates;
-                handles.centreX = dummyCentreX*scaleX;
-                handles.centreY = dummyCentreY*scaleY;
-                repaintMarker(hObject,handles);
+                
             case 2
+                procImageSize = size(handles.processedImage);
+                scaleY = procImageSize(2)/1080;
+                scaleX = procImageSize(1)/1080;
                 fit.setCentreCoordinates(round(handles.centreX*scaleX),round(handles.centreY*scaleY));
         end
         fit.runXFit;
