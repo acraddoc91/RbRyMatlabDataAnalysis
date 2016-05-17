@@ -48,6 +48,10 @@ function varargout = refitter(varargin)
 function fitter_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     guidata(hObject, handles);
+    if length(varargin) == 1
+        handles.indexNum = varargin{1};
+        loadFile(hObject,handles);
+    end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = fitter_OutputFcn(hObject, eventdata, handles) 
@@ -60,25 +64,8 @@ function LoadIndex_Callback(hObject, eventdata, handles)
     shotData = evalin('base','shotData');
     %get index to load
     handles.indexNum = listdlg('PromptString','Choose index to re-fit','ListString',strsplit(int2str([shotData.Index])),'SelectionMode','single');
-    set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
-    fullFilename = char(shotData(handles.indexNum).filePath);
-    set(handles.filepathDisp,'String',fullFilename);
-    %grab pictures from file and get processed image
-    %(log(absorption-background)/(probe-background))
-    absorption = double(h5read(fullFilename,'/Images/Absorption'));
-    probe = double(h5read(fullFilename,'/Images/Probe'));
-    background = double(h5read(fullFilename,'/Images/Background'));
-    handles.processedImage = real(log((absorption-background)./(probe-background)));
-    %plot the processed image to the procImage axes
-    axes(handles.procImage);
-    handles.procImageResize = imshow(imresize(handles.processedImage,[1080 1080]),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
-    %determine image scaling relative to axes1
-    procImageSize = size(handles.processedImage);
-    handles.scaleY = procImageSize(2)/1080;
-    handles.scaleX = procImageSize(1)/1080;
-    %save all handles information
-    guidata(hObject,handles)
-
+    loadFile(hObject,eventdata,handles);
+    
 % --- Executes on selection change in centreSelection.
 function centreSelection_Callback(hObject, eventdata, handles)
 
@@ -192,3 +179,25 @@ function saveVals_Callback(hObject, eventdata, handles)
         shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
     assignin('base','shotData',shotData);
+%function to load shot for refitting    
+function loadFile(hObject,handles)
+    %import shotData to grab filename
+    shotData = evalin('base','shotData');
+    set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
+    fullFilename = char(shotData(handles.indexNum).filePath);
+    set(handles.filepathDisp,'String',fullFilename);
+    %grab pictures from file and get processed image
+    %(log(absorption-background)/(probe-background))
+    absorption = double(h5read(fullFilename,'/Images/Absorption'));
+    probe = double(h5read(fullFilename,'/Images/Probe'));
+    background = double(h5read(fullFilename,'/Images/Background'));
+    handles.processedImage = real(log((absorption-background)./(probe-background)));
+    %plot the processed image to the procImage axes
+    axes(handles.procImage);
+    handles.procImageResize = imshow(imresize(handles.processedImage,[1080 1080]),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
+    %determine image scaling relative to axes1
+    procImageSize = size(handles.processedImage);
+    handles.scaleY = procImageSize(2)/1080;
+    handles.scaleX = procImageSize(1)/1080;
+    %save all handles information
+    guidata(hObject,handles)
