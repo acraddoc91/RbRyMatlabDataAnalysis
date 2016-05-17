@@ -22,7 +22,7 @@ function varargout = refitter(varargin)
 
     % Edit the above text to modify the response to help fitter
 
-    % Last Modified by GUIDE v2.5 16-May-2016 17:04:53
+    % Last Modified by GUIDE v2.5 17-May-2016 15:32:34
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -47,6 +47,7 @@ function varargout = refitter(varargin)
 % --- Executes just before fitter is made visible.
 function fitter_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
+    handles.roiPoints = [1,1,1080,1080];
     guidata(hObject, handles);
     if length(varargin) == 1
         handles.indexNum = varargin{1};
@@ -64,7 +65,7 @@ function LoadIndex_Callback(hObject, eventdata, handles)
     shotData = evalin('base','shotData');
     %get index to load
     handles.indexNum = listdlg('PromptString','Choose index to re-fit','ListString',strsplit(int2str([shotData.Index])),'SelectionMode','single');
-    loadFile(hObject,eventdata,handles);
+    loadFile(hObject,handles);
     
 % --- Executes on selection change in centreSelection.
 function centreSelection_Callback(hObject, eventdata, handles)
@@ -179,6 +180,7 @@ function saveVals_Callback(hObject, eventdata, handles)
         shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
     assignin('base','shotData',shotData);
+    
 %function to load shot for refitting    
 function loadFile(hObject,handles)
     %import shotData to grab filename
@@ -201,3 +203,19 @@ function loadFile(hObject,handles)
     handles.scaleX = procImageSize(1)/1080;
     %save all handles information
     guidata(hObject,handles)
+
+
+% --- Executes on button press in roiSetter.
+function roiSetter_Callback(hObject, eventdata, handles)
+    %get cropped image
+    set(handles.roiSetter,'Enable','off')
+    axes(handles.procImage);
+    [~,handles.roiPoints] = imcrop();
+    if isfield(handles,'roiRectangle') ~= 0
+        delete(handles.roiRectangle);
+    end
+    handles.roiRectangle = rectangle('Position',handles.roiPoints);
+    handles.roiPoints
+    set(handles.roiSetter,'Enable','on')
+    guidata(hObject,handles);
+    
