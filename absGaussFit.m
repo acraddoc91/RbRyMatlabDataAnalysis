@@ -27,17 +27,24 @@ classdef absGaussFit < basicFittingClass
             self.setProcessedImage(real(log((absorption-background)./(probe-background))));
         end
         %Manually set the coordinates to the cloud centre
-        function setCentreCoordinates(self,centreXIn,centreYIn)
-            %Set location of the centre of the cloud
-            self.centreX = centreXIn;
-            self.centreY = centreYIn;
+        function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)
+            %Check centre is within ROI
+            ROI = self.getROI();
+            if centreXIn > ROI(1) && centreXIn < ROI(3) && centreYIn > ROI(2) && centreYIn < ROI(4)
+                %Set location of the centre of the cloud
+                self.centreX = centreXIn;
+                self.centreY = centreYIn;
+                goodPoint = true;
+            else
+                goodPoint = false;
+            end
         end
         %Automagically find the centre of the cloud
         function findCentreCoordinates(self)
             %Sum over the columns and rows respectively to collapse the processed
             %image down into a a vector
-            summedCols = sum(self.getProcessedImage,1);
-            summedRows = sum(self.getProcessedImage,2);
+            summedCols = sum(self.getProcessedImageROI,1);
+            summedRows = sum(self.getProcessedImageROI,2);
             %Determine the minimum of this collapsed vector for both columns and
             %rows to find the approximate middle of the cloud.
             [~,minCol] = min(summedRows);
@@ -108,9 +115,6 @@ classdef absGaussFit < basicFittingClass
         %produce the shot
         function setMagnification(self,mag)
             self.magnification = mag;
-        end
-        function setROI(self,roiIn)
-            
         end
     end
     
