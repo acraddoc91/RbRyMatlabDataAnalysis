@@ -7,6 +7,7 @@ classdef basicFittingClass < handle
     %classes
     properties
         processedImage = 0;
+        roiPoints;
     end
     
     %And some methods which should be general to all fitting classes
@@ -14,6 +15,7 @@ classdef basicFittingClass < handle
         %Set the processed image of our object to that passed in the method
         function setProcessedImage(self,procImageIn)
             self.processedImage = procImageIn;
+            self.roiPoints = [1,1,size(self.processedImage)];
         end
         %Do a contour plot of the processed image
         function plotProcessedImage(self)
@@ -23,7 +25,14 @@ classdef basicFittingClass < handle
         function procImageOut = getProcessedImage(self)
             procImageOut = self.processedImage;
         end
+        %return the region of interest
+        function roiOut = getROI(self)
+            roiOut = self.roiPoints;
+        end
+        %set the region of interest
+        function setRoi(self,roiIn)
+            self.roiPoints = roiIn;
+        end
     end
-    
 end
 

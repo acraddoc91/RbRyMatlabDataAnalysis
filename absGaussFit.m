@@ -109,6 +109,9 @@ classdef absGaussFit < basicFittingClass
         function setMagnification(self,mag)
             self.magnification = mag;
         end
+        function setROI(self,roiIn)
+            
+        end
     end
     
 end
