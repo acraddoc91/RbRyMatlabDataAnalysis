@@ -47,7 +47,6 @@ function varargout = refitter(varargin)
 % --- Executes just before fitter is made visible.
 function fitter_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
-    handles.roiPoints = [1,1,1080,1080];
     guidata(hObject, handles);
     if length(varargin) == 1
         handles.indexNum = varargin{1};
@@ -112,6 +111,8 @@ function runFit_Callback(hObject, eventdata, handles)
             fit.setProcessedImage(handles.processedImage);
             %determine if we want to manually specify centre coordinates
             manCords = get(handles.centreSelection,'Value');
+            %Set ROI
+            fit.setRoi(handles.roiRect_pix);
             %either manually set centre coordinates or find them automagically
             switch manCords
                 case 1
@@ -169,16 +170,18 @@ function repaintMarker(hObject,handles,markerCentreX,markerCentreY)
     hold off;
 
 
-% --- Executes on button press in saveVals.
+%Save fitted data to shotData in the base workspace
 function saveVals_Callback(hObject, eventdata, handles)
+    %Pull in the shotData from the base workspace
     shotData = evalin('base','shotData');
-    handles.centreX_pix;
+    %Update shotData with new values
     shotData(handles.indexNum).centreX_pix = handles.centreX_pix;
     shotData(handles.indexNum).centreY_pix = handles.centreY_pix;
     fitFieldNames = fieldnames(handles.fitVars);
     for i=1:length(fitFieldNames)
         shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
+    %Write new shotData to workspace
     assignin('base','shotData',shotData);
     
 %function to load shot for refitting    
@@ -201,21 +204,35 @@ function loadFile(hObject,handles)
     procImageSize = size(handles.processedImage);
     handles.scaleY = procImageSize(2)/1080;
     handles.scaleX = procImageSize(1)/1080;
+    handles.roiRect_pix = [1,1,procImageSize(1),procImageSize(2)];
     %save all handles information
     guidata(hObject,handles)
 
 
 % --- Executes on button press in roiSetter.
 function roiSetter_Callback(hObject, eventdata, handles)
-    %get cropped image
+    %Prevent re-clicking of the button
     set(handles.roiSetter,'Enable','off')
-    axes(handles.procImage);
-    [~,handles.roiPoints] = imcrop();
-    if isfield(handles,'roiRectangle') ~= 0
-        delete(handles.roiRectangle);
-    end
-    handles.roiRectangle = rectangle('Position',handles.roiPoints);
-    handles.roiPoints
-    set(handles.roiSetter,'Enable','on')
+    %get cropped image
+    [~,roiRect] = imcrop();
+    %Figure out scaling rounding to nearest integer
+    handles.roiRect_pix = [ceil(roiRect(2)*handles.scaleX),ceil(roiRect(1)*handles.scaleY),floor(roiRect(4)*handles.scaleX),floor(roiRect(3)*handles.scaleY)];
     guidata(hObject,handles);
-    
+    %Repaint the ROI rectangle
+    repaintROIRectangle(hObject,handles,roiRect);
+    %Allow button to be clicked
+    set(handles.roiSetter,'Enable','on')
+
+%function to repaint the ROI rectangle on the image
+function repaintROIRectangle(hObject,handles,roiRectangle)
+    %make sure we are drawing to the processed image
+    axes(handles.procImage);
+    %Delete any old ROI rectangles if necessary
+    if isfield(handles,'roiImageRectangle') ~= 0
+        delete(handles.roiImageRectangle);
+    end
+    %Paint the new rectangle and save the rectangle to handles
+    hold on
+    handles.roiImageRectangle = rectangle('Position',roiRectangle);
+    guidata(hObject,handles);
+    hold off

@@ -165,9 +165,9 @@ switch fitType
         switch manCords
             case 1
                 fit.findCentreCoordinates
-                [dummyCentreX,dummyCentreY] = fit.getCentreCoordinates;
-                handles.centreX = dummyCentreX*scaleX;
-                handles.centreY = dummyCentreY*scaleY;
+                dummyCentre = fit.getCentreCoordinates;
+                handles.centreX = dummyCentre.centreX_pix/scaleX;
+                handles.centreY = dummyCentre.centreY_pix/scaleY;
                 repaintMarker(hObject,handles);
             case 2
                 fit.setCentreCoordinates(round(handles.centreX*scaleX),round(handles.centreY*scaleY));
@@ -200,16 +200,8 @@ repaintMarker(hObject,handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-
-% --- Executes on button press in togglebutton1.
-function togglebutton1_Callback(hObject, eventdata, handles)
-% hObject    handle to togglebutton1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of togglebutton1
-
 function repaintMarker(hObject,handles)
+axes(handles.axes1);
 if isfield(handles,'marker') ~= 0
     delete(handles.marker);
 end

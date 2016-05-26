@@ -23,8 +23,7 @@ classdef basicFittingClass < handle
         end
         %Get the processed image
         function procImageOut = getProcessedImage(self)
-            procImageOut = self.processedImage(self.roiPoints(1):self.roiPoints(3),self.roiPoints(2):self.roiPoints(4));
-            imshow(procImageOut);
+            procImageOut = self.processedImage(self.roiPoints(1):(self.roiPoints(1)+self.roiPoints(3)-1),self.roiPoints(2):(self.roiPoints(2)+self.roiPoints(4)-1));
         end
         %return the region of interest
         function roiOut = getROI(self)

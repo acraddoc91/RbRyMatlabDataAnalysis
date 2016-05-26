@@ -30,10 +30,12 @@ classdef absGaussFit < basicFittingClass
         function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)
             %Check centre is within ROI
             ROI = self.getROI();
-            if centreXIn > ROI(1) && centreXIn < ROI(3) && centreYIn > ROI(2) && centreYIn < ROI(4)
+            if centreXIn > ROI(1) && centreXIn < ROI(1)+ROI(3) && centreYIn > ROI(2) && centreYIn < ROI(2)+ROI(4)
                 %Set location of the centre of the cloud
-                self.centreX = centreXIn;
-                self.centreY = centreYIn;
+                self.centreX = centreXIn - ROI(1);
+                self.centreY = centreYIn - ROI(2);
+                self.xCoffs(3) = self.centreX;
+                self.yCoffs(3) = self.centreY;
                 goodPoint = true;
             else
                 goodPoint = false;
@@ -43,19 +45,22 @@ classdef absGaussFit < basicFittingClass
         function findCentreCoordinates(self)
             %Sum over the columns and rows respectively to collapse the processed
             %image down into a a vector
-            summedCols = sum(self.getProcessedImageROI,1);
-            summedRows = sum(self.getProcessedImageROI,2);
+            summedCols = sum(self.getProcessedImage,1);
+            summedRows = sum(self.getProcessedImage,2);
             %Determine the minimum of this collapsed vector for both columns and
             %rows to find the approximate middle of the cloud.
             [~,minCol] = min(summedRows);
             [~,minRow] = min(summedCols);
             self.centreX = minCol;
             self.centreY = minRow;
+            self.xCoffs(3) = self.centreX;
+            self.yCoffs(3) = self.centreY;
         end
         %Fit the cloud in the X direction
         function runXFit(self)
             processedImage = self.getProcessedImage();
             xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+            self.xCoffs(2) = -min(xVec);
             xPix = [1:length(xVec)];
             self.xCoffs = lsqcurvefit(self.gauss,self.xCoffs,xPix,xVec,[],[],self.opts);
         end
@@ -63,6 +68,7 @@ classdef absGaussFit < basicFittingClass
         function runYFit(self)
             processedImage = self.getProcessedImage();
             yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+            self.yCoffs(2) = -min(yVec);
             yPix = transpose([1:length(yVec)]);
             self.yCoffs = lsqcurvefit(self.gauss,self.yCoffs,yPix,yVec,[],[],self.opts);
         end
@@ -101,8 +107,9 @@ classdef absGaussFit < basicFittingClass
         end
         %Return centre coordinates
         function centreCoords = getCentreCoordinates(self)
-            centreCoords.('centreX_pix') = self.centreX;
-            centreCoords.('centreY_pix') = self.centreY;
+            roi = self.getROI;
+            centreCoords.('centreX_pix') = self.centreX + roi(1);
+            centreCoords.('centreY_pix') = self.centreY + roi(2);
         end
         %Output fit values (specifically the x & y sigma atm) to a
         %structure
