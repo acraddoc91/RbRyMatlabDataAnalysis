@@ -87,9 +87,12 @@ function yVar_CreateFcn(hObject, eventdata, handles)
         set(hObject,'BackgroundColor','white');
     end
 
+%Executes when needed to update GUI    
 function GUIUpdate(timerObj,eventdata,hObject)
     handles = guidata(hObject);
     try
+        %Grab the data from the base workspace and update the live plot
+        %based on the fields selected
         shotIn = evalin('base','shotData');
         if isequal(shotIn,handles.shotData) ~= 1
             if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
@@ -122,7 +125,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     delete(hObject);
 
 
-% --- Executes on button press in refitButton.
+%Allows user to refit point selected by cursor click
 function refitButton_Callback(hObject, eventdata, handles)
     %Get number of point to refit and open up the refit gui to do fit
     axes(handles.livePlot);
@@ -130,7 +133,8 @@ function refitButton_Callback(hObject, eventdata, handles)
     refitter(refitIndexNum);
 
 
-% --- Executes on button press in popoutButton.
+%Makes a popout figure from the plot currently being viewed for
+%manipulation
 function popoutButton_Callback(hObject, eventdata, handles)
     popfig = figure;
     plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');

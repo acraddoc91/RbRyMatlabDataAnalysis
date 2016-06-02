@@ -1,7 +1,7 @@
-function shotStructure = autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile,magnification)
+function autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile,magnification)
     %autorun function which should be called each time imaging data is
     %collected
-    
+   
     fitDone = false;    
     %Run the required fit and send values 
     if strcmp(fitType,'absGaussFit')
@@ -63,6 +63,15 @@ function shotStructure = autorun(filename,fitType,writeCalcVarsToFile,writeExper
      end
      shotStructure.Index = str2double(fileNumSplit(2));
      shotStructure.filePath = filename;
+     
+     %Try and import shotData from the base workspace and update it
+     try
+         shotIn = evalin('base','shotData');
+         shotOut = [shotIn,shotStructure];
+         assignin('base','shotData',shotOut);
+     catch
+         assignin('base','shotData',shotStructure);
+     end
 
 end
 
