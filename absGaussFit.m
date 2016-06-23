@@ -10,10 +10,10 @@ classdef absGaussFit < basicFittingClass
         centreY=0;
         xCoffs=[0,1,900,300];
         yCoffs=[0,1,500,300];
-        atomNumber = 0;
         %Define the gaussian fitting function
         gauss = @(coffs,x) transpose(coffs(1)-coffs(2).*exp(-(x-coffs(3)).^2/(2*coffs(4).^2)));
         opts = optimset('Display','off');
+        atomNumber = 0;
     end
     
     methods
@@ -118,15 +118,27 @@ classdef absGaussFit < basicFittingClass
             %note sigmaX & sigmaY are in micrometres
             fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize*self.magnification;
             fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize*self.magnification;
-            fitVars.('N_atoms') = self.atomNumber;
+            fitVars.('N_atoms') = self.getAtomNumber;
         end
         %Function to set the magnification of the lens system used to
         %produce the shot
         function setMagnification(self,mag)
             self.magnification = mag;
         end
-        function getAtomNumber(self,imagingDetuning)
-            
+        function calculateAtomNumber(self,imagingDetuning,imagingIntensity)
+            %values for 87Rb D2 line
+            gam = 38.116 * 10^6;
+            isat = 1.6692*10^(-3); %W/cm^2 for sigma_\pm polarised light
+            %isat = 2.5033; %W/cm^2 for pi polarised light
+            hbar = 1.0545718*10^(-34);
+            omega = 2*pi*384.2281152028*10^12;
+            sig0 = hbar*omega*gam/(2*isat);
+            sig = sig0/(1+4*(2*pi*imagingDetuning/gam)^2+(imagingIntensity/(isat))) * 10^-4; %in m^2
+            procImage = self.getProcessedImage();
+            self.atomNumber = -sum(sum(procImage))*(self.magnification*self.pixSize*10^(-6))^2/sig;
+        end
+        function atomNum = getAtomNumber(self)
+            atomNum = self.atomNumber;
         end
     end
     

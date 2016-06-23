@@ -22,7 +22,7 @@ function varargout = refitter(varargin)
 
     % Edit the above text to modify the response to help fitter
 
-    % Last Modified by GUIDE v2.5 17-May-2016 15:32:34
+    % Last Modified by GUIDE v2.5 23-Jun-2016 15:53:27
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -109,6 +109,10 @@ function runFit_Callback(hObject, eventdata, handles)
             %create fit function and load the image to it
             fit = absGaussFit;
             fit.setProcessedImage(handles.processedImage);
+            try
+                fit.setMagnification(handles.currShotData.Magnification);
+            catch
+            end
             %determine if we want to manually specify centre coordinates
             manCords = get(handles.centreSelection,'Value');
             %Set ROI
@@ -130,8 +134,14 @@ function runFit_Callback(hObject, eventdata, handles)
             fit.plotX
             axes(handles.yFitPlot)
             fit.plotY
-            %save the fitting variables to handles
+            try
+                fit.calculateAtomNumber(handles.currShotData.ImagingDetuning,handles.currShotData.ImagingIntensity);
+            catch
+            end
             handles.fitVars = fit.getFitVars();
+            handles.fitVars.N_atoms
+            %Set Atom number
+            set(handles.atomNum,'String',handles.fitVars.N_atoms);
             %save handles information
             guidata(hObject,handles);
             %rescale the centre for the rescaled image
@@ -205,6 +215,7 @@ function loadFile(hObject,handles)
     handles.scaleY = procImageSize(2)/1080;
     handles.scaleX = procImageSize(1)/1080;
     handles.roiRect_pix = [1,1,procImageSize(1),procImageSize(2)];
+    handles.currShotData = shotData(handles.indexNum);
     %save all handles information
     guidata(hObject,handles)
 

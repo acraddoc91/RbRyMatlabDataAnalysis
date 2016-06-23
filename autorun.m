@@ -1,8 +1,7 @@
-function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile,magnification)
+function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile)
     %autorun function which should be called each time imaging data is
     %collected
-<<<<<<< HEAD
-    
+    analysisdone=0;
     %Parse and write experimental control variables to file (if necessary) and output
     %control variable structure
     informString = char(h5read(filename,'/Inform/Inform String'));
@@ -31,10 +30,6 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
      shotStructure.Index = str2double(fileNumSplit(2));
      shotStructure.filePath = filename;
      
-     
-=======
-    analysisdone=0;
->>>>>>> origin/master
     fitDone = false;    
     %Run the required fit and send values 
     if strcmp(fitType,'absGaussFit')
@@ -45,8 +40,18 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
         fit.findCentreCoordinates();
         %Do the fits
         fit.runFits();
-        %Set the imaging system magnification
-        fit.setMagnification(magnification);
+        try
+            %Set the imaging system magnification
+            fit.setMagnification(shotStructure.Magnification);
+        catch
+            disp('magnification not set in Setlist')
+        end
+        try
+            %Calculate atom number
+            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity)
+        catch
+            disp('imagingDetuning or imagingIntensity not set in Setlist')
+        end
         %Grab the fit variables (specifically the x & y sigmas) and centre
         %coordinates and start populating the shotStructure
         fitStruct = fit.getFitVars();
