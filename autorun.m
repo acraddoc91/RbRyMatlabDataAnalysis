@@ -1,6 +1,7 @@
-function autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile,magnification)
+function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile,magnification)
     %autorun function which should be called each time imaging data is
     %collected
+<<<<<<< HEAD
     
     %Parse and write experimental control variables to file (if necessary) and output
     %control variable structure
@@ -31,6 +32,9 @@ function autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFil
      shotStructure.filePath = filename;
      
      
+=======
+    analysisdone=0;
+>>>>>>> origin/master
     fitDone = false;    
     %Run the required fit and send values 
     if strcmp(fitType,'absGaussFit')
@@ -77,6 +81,6 @@ function autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFil
      catch
          assignin('base','shotData',shotStructure);
      end
-
+     analysisdone=1;
 end
 
