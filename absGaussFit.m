@@ -10,6 +10,7 @@ classdef absGaussFit < basicFittingClass
         centreY=0;
         xCoffs=[0,1,900,300];
         yCoffs=[0,1,500,300];
+        atomNumber = 0;
         %Define the gaussian fitting function
         gauss = @(coffs,x) transpose(coffs(1)-coffs(2).*exp(-(x-coffs(3)).^2/(2*coffs(4).^2)));
         opts = optimset('Display','off');
@@ -117,11 +118,15 @@ classdef absGaussFit < basicFittingClass
             %note sigmaX & sigmaY are in micrometres
             fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize*self.magnification;
             fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize*self.magnification;
+            fitVars.('N_atoms') = self.atomNumber;
         end
         %Function to set the magnification of the lens system used to
         %produce the shot
         function setMagnification(self,mag)
             self.magnification = mag;
+        end
+        function getAtomNumber(self,imagingDetuning)
+            
         end
     end
     

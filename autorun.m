@@ -1,40 +1,6 @@
 function autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFile,magnification)
     %autorun function which should be called each time imaging data is
     %collected
-   
-    fitDone = false;    
-    %Run the required fit and send values 
-    if strcmp(fitType,'absGaussFit')
-        %first let's make a fit object and load the current file to it
-        fit = absGaussFit;
-        fit.loadFromFile(filename);
-        %automagically find the centre coordinates
-        fit.findCentreCoordinates();
-        %Do the fits
-        fit.runFits();
-        %Set the imaging system magnification
-        fit.setMagnification(magnification);
-        %Grab the fit variables (specifically the x & y sigmas) and centre
-        %coordinates and start populating the shotStructure
-        shotStructure = fit.getFitVars();
-        centreCoords = fit.getCentreCoordinates();
-        centreNames = fieldnames(centreCoords);
-        for i=1:2
-            shotStructure.(char(centreNames(i))) = centreCoords.(char(centreNames(i)));
-        end
-        fitDone = true;
-    end
-    
-    %Write variables gathered from fit to file if necessary
-    if writeCalcVarsToFile && fitDone
-        outVarNames = fieldnames(shotStructure);
-        numVars = length(outVarNames);
-        for i = 1:numVars;
-            calcVarName = sprintf('/Calculated Values/%s',char(outVarNames(i)));
-            h5create(filename,calcVarName,1);
-            h5write(filename,calcVarName,shotStructure.(char(outVarNames(i))));
-        end
-    end
     
     %Parse and write experimental control variables to file (if necessary) and output
     %control variable structure
@@ -63,6 +29,45 @@ function autorun(filename,fitType,writeCalcVarsToFile,writeExperimentalVarsToFil
      end
      shotStructure.Index = str2double(fileNumSplit(2));
      shotStructure.filePath = filename;
+     
+     
+    fitDone = false;    
+    %Run the required fit and send values 
+    if strcmp(fitType,'absGaussFit')
+        %first let's make a fit object and load the current file to it
+        fit = absGaussFit;
+        fit.loadFromFile(filename);
+        %automagically find the centre coordinates
+        fit.findCentreCoordinates();
+        %Do the fits
+        fit.runFits();
+        %Set the imaging system magnification
+        fit.setMagnification(magnification);
+        %Grab the fit variables (specifically the x & y sigmas) and centre
+        %coordinates and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        centreCoords = fit.getCentreCoordinates();
+        centreNames = fieldnames(centreCoords);
+        for i=1:2
+            shotStructure.(char(centreNames(i))) = centreCoords.(char(centreNames(i)));
+        end
+        fitDone = true;
+    end
+    
+    %Write variables gathered from fit to file if necessary
+    if writeCalcVarsToFile && fitDone
+        outVarNames = fieldnames(shotStructure);
+        numVars = length(outVarNames);
+        for i = 1:numVars;
+            calcVarName = sprintf('/Calculated Values/%s',char(outVarNames(i)));
+            h5create(filename,calcVarName,1);
+            h5write(filename,calcVarName,shotStructure.(char(outVarNames(i))));
+        end
+    end
      
      %Try and import shotData from the base workspace and update it
      try
