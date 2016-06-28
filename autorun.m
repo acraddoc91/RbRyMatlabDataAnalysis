@@ -81,9 +81,17 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
      %Try and import shotData from the base workspace and update it
      try
          shotIn = evalin('base','shotData');
-         shotOut = [shotIn,shotStructure];
+         %see if index already exists
+         repIndex = find([shotIn.Index]==shotStructure.Index);
+         if length(repIndex)==0
+             shotOut = structAppend(shotIn,shotStructure);
+         else
+             shotOut = shotIn;
+             shotOut(repIndex) = shotStructure;
+         end
          assignin('base','shotData',shotOut);
-     catch
+     catch ME
+         disp(ME.identifier)
          assignin('base','shotData',shotStructure);
      end
      analysisdone=1;
