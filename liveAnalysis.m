@@ -22,7 +22,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 17-May-2016 15:07:36
+    % Last Modified by GUIDE v2.5 28-Jun-2016 11:59:07
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -140,3 +140,15 @@ function popoutButton_Callback(hObject, eventdata, handles)
     plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
     xlabel(handles.xField,'Interpreter','none');
     ylabel(handles.yField,'Interpreter','none');
+
+
+%Allows user to load data from file
+function loadFromFile_Callback(hObject, eventdata, handles)
+    %Popout listbox to choose fit types
+    fitList = {'absGaussFit'};
+    [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
+    %If fit has been chosen reload data file using selected fit type
+    if(fitChosen)
+        fitType = char(fitList(fitIndex));
+        reloadDataFile(fitType);
+    end
