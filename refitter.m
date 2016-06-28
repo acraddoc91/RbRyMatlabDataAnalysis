@@ -196,7 +196,7 @@ function saveVals_Callback(hObject, eventdata, handles)
 %function to load shot for refitting    
 function loadFile(hObject,handles)
     %import shotData to grab filename
-    shotData = evalin('base','shotData');
+    shotData = cutDataFunc;
     set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
     fullFilename = char(shotData(handles.indexNum).filePath);
     set(handles.filepathDisp,'String',fullFilename);
