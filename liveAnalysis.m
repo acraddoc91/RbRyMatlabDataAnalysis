@@ -22,7 +22,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 28-Jun-2016 11:59:07
+    % Last Modified by GUIDE v2.5 28-Jun-2016 19:01:02
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -93,7 +93,7 @@ function GUIUpdate(timerObj,eventdata,hObject)
     try
         %Grab the data from the base workspace and update the live plot
         %based on the fields selected
-        shotIn = evalin('base','shotData');
+        shotIn = cutDataFunc();
         if isequal(shotIn,handles.shotData) ~= 1
             if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
                 handles.variables = fieldnames(shotIn);
@@ -152,3 +152,9 @@ function loadFromFile_Callback(hObject, eventdata, handles)
         fitType = char(fitList(fitIndex));
         reloadDataFile(fitType);
     end
+
+
+
+%Opens up data cutter GUI
+function openCutter_Callback(hObject, eventdata, handles)
+    cutter(fieldnames(handles.shotData))

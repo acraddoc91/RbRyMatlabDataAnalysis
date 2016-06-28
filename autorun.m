@@ -91,7 +91,7 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
          end
          assignin('base','shotData',shotOut);
      catch ME
-         disp(ME.identifier)
+         %disp(ME.identifier)
          assignin('base','shotData',shotStructure);
      end
      analysisdone=1;
