@@ -48,7 +48,7 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
         end
         try
             %Calculate atom number
-            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity)
+            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity);
         catch
             disp('imagingDetuning or imagingIntensity not set in Setlist')
         end

@@ -133,8 +133,9 @@ classdef absGaussFit < basicFittingClass
             hbar = 1.0545718*10^(-34);
             omega = 2*pi*384.2281152028*10^12;
             sig0 = hbar*omega*gam/(2*isat);
-            sig = sig0/(1+4*(2*pi*imagingDetuning/gam)^2+(imagingIntensity/(isat))) * 10^-4; %in m^2
+            sig = sig0/(1+4*(2*pi*imagingDetuning*10^6/gam)^2+(imagingIntensity/(isat))) * 10^-4; %in m^2
             procImage = self.getProcessedImage();
+            procImage(procImage>0) = 0; %set any values of procImage which have a negative OD, which comes about because of interference in the image
             self.atomNumber = -sum(sum(procImage))*(self.magnification*self.pixSize*10^(-6))^2/sig;
         end
         function atomNum = getAtomNumber(self)

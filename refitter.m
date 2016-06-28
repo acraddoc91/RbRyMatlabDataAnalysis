@@ -139,7 +139,6 @@ function runFit_Callback(hObject, eventdata, handles)
             catch
             end
             handles.fitVars = fit.getFitVars();
-            handles.fitVars.N_atoms
             %Set Atom number
             set(handles.atomNum,'String',handles.fitVars.N_atoms);
             %save handles information
@@ -149,7 +148,7 @@ function runFit_Callback(hObject, eventdata, handles)
             markerCentreY = handles.centreY_pix/handles.scaleY;
             %redraw the marker with new centre point
             repaintMarker(hObject,handles,markerCentreX,markerCentreY);
-end
+    end
 
 % --- Executes on mouse motion over figure - except title and menu.
 function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
