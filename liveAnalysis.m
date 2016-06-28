@@ -93,7 +93,7 @@ function GUIUpdate(timerObj,eventdata,hObject)
     try
         %Grab the data from the base workspace and update the live plot
         %based on the fields selected
-        shotIn = cutDataFunc();
+        shotIn = grabCutData;
         if isequal(shotIn,handles.shotData) ~= 1
             if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
                 handles.variables = fieldnames(shotIn);
