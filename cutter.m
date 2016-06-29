@@ -46,19 +46,19 @@ end
 
 % --- Executes just before cutter is made visible.
 function cutter_OpeningFcn(hObject, eventdata, handles, varargin)
-    % This function has no output args, see OutputFcn.
-    % hObject    handle to figure
-    % eventdata  reserved - to be defined in a future version of MATLAB
-    % handles    structure with handles and user data (see GUIDATA)
-    % varargin   command line arguments to cutter (see VARARGIN)
+    %Cutter takes a fieldlist as the argument in, so when cutter is
+    %openened go ahead and grab the fieldlist and stick it into handles and
+    %set the selectable fields of the cutting table to be the field list
     dummyFieldList = varargin(1);
     handles.fieldList = dummyFieldList{1};
     set(handles.cutTable,'ColumnFormat',{transpose(handles.fieldList),'char','logical'});
+    %check to see if a cutTable exists on the base workspace
     try
         currCutTable = evalin('base','cutTable');
     catch
         currCutTable = {};
     end
+    %load current cuts to the table
     [numCuts,~] = size(currCutTable);
     if numCuts == 0
         set(handles.cutTable,'Data',{'','',false})
@@ -84,42 +84,39 @@ function varargout = cutter_OutputFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in addCut.
 function addCut_Callback(hObject, eventdata, handles)
+    %when add cut is pressed add an extra line to the cutting table
     currTableData=get(handles.cutTable,'Data');
     set(handles.cutTable,'Data',[currTableData;{'','',false}])
 
 % --- Executes during object creation, after setting all properties.
 function cutTable_CreateFcn(hObject, eventdata, handles)
-    %handles.fieldList
-    %for i=1:length(handles.fieldList)
-    %    handles.fieldList(i)
-    %end
-    %set(handles.cutTable,'ColumnFormat',{handles.fieldList,'Text'});
 
 
 % --- Executes during object deletion, before destroying properties.
 function cutTable_DeleteFcn(hObject, eventdata, handles)
-% hObject    handle to cutTable (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 function cutTable_CellSelectionCallback(hObject,eventdata,handles)
 
 
 % --- Executes on button press in doCuts.
 function doCuts_Callback(hObject, eventdata, handles)
+    %Grab the cuting table
     cutTableData = get(handles.cutTable,'Data');
     [numCuts,~]=size(cutTableData);
     cutTableOut = {};
+    %strip out any cuts which aren't supposed to be made
     for i=1:numCuts
         dummyDoCut = cutTableData(i,3);
         if dummyDoCut{1}
             cutTableOut = [cutTableOut;cutTableData(i,1:2)];
         end
     end
+    %replace base workspace cutTable
     assignin('base','cutTable',cutTableOut);
 
 
 % --- Executes on button press in clearCuts.
 function clearCuts_Callback(hObject, eventdata, handles)
+    %clear cutting table and clear the base workspace cutTable
     set(handles.cutTable,'Data',{'','',false})
     assignin('base','cutTable',{});
