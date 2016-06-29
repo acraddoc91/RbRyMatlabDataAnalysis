@@ -60,18 +60,40 @@ classdef absGaussFit < basicFittingClass
         %Fit the cloud in the X direction
         function runXFit(self)
             processedImage = self.getProcessedImage();
-            xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+            [~,ysiz]=size(processedImage);
+            if(self.centreY-10 < 1)
+                xVec = sum(processedImage(:,1:self.centreY+10),2)/(self.centreY+10);
+            elseif(self.centreX+10 > ysiz)
+                xVec = sum(processedImage(:,self.centreY-10:ysiz),2)/(ysiz-self.centreY+10);
+            else
+                xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+            end
             self.xCoffs(2) = -min(xVec);
             xPix = [1:length(xVec)];
-            self.xCoffs = lsqcurvefit(self.gauss,self.xCoffs,xPix,xVec,[],[],self.opts);
+            try
+                self.xCoffs = lsqcurvefit(self.gauss,self.xCoffs,xPix,xVec,[],[],self.opts);
+            catch
+                self.xCoffs = [NaN,NaN,NaN,NaN];
+            end
         end
         %Fit the cloud in the Y direction
         function runYFit(self)
             processedImage = self.getProcessedImage();
-            yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+            [xsiz,~]=size(processedImage);
+            if(self.centreX-10 < 1)
+                yVec = sum(processedImage(1:self.centreX+10,:),1)/(self.centreX+10);
+            elseif(self.centreX+10 > xsiz)
+                yVec = sum(processedImage(self.centreX-10:xsiz,:),1)/(xsiz-self.centreX+10);
+            else
+                yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+            end
             self.yCoffs(2) = -min(yVec);
             yPix = transpose([1:length(yVec)]);
-            self.yCoffs = lsqcurvefit(self.gauss,self.yCoffs,yPix,yVec,[],[],self.opts);
+            try
+                self.yCoffs = lsqcurvefit(self.gauss,self.yCoffs,yPix,yVec,[],[],self.opts);
+            catch
+                self.yCoffs = [NaN,NaN,NaN,NaN];
+            end
         end
         %Run both fits, included for brevity in other locations
         function runFits(self)
@@ -81,7 +103,14 @@ classdef absGaussFit < basicFittingClass
         %Plot the x directional slice of the cloud with its fit
         function plotX(self)
             processedImage = self.getProcessedImage();
-            xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+            [~,ysiz]=size(processedImage);
+            if(self.centreY-10 < 1)
+                xVec = sum(processedImage(:,1:self.centreY+10),2)/(self.centreY+10);
+            elseif(self.centreX+10 > ysiz)
+                xVec = sum(processedImage(:,self.centreY-10:ysiz),2)/(ysiz-self.centreY+10);
+            else
+                xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+            end
             spatialVec = self.pixSize * self.magnification * [1:length(xVec)]- self.pixSize * self.magnification * self.centreX;
             plot(spatialVec,xVec,'.')
             hold all
@@ -95,7 +124,14 @@ classdef absGaussFit < basicFittingClass
         %Plot the y directional slice of the cloud with its fit
         function plotY(self)
             processedImage = self.getProcessedImage();
-            yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+            [xsiz,~]=size(processedImage);
+            if(self.centreX-10 < 1)
+                yVec = sum(processedImage(1:self.centreX+10,:),1)/(self.centreX+10);
+            elseif(self.centreX+10 > xsiz)
+                yVec = sum(processedImage(self.centreX-10:xsiz,:),1)/(xsiz-self.centreX+10);
+            else
+                yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+            end
             spatialVec = self.pixSize * self.magnification * [1:length(yVec)]- self.pixSize * self.magnification * self.centreY;
             plot(spatialVec,yVec,'.')
             hold all
