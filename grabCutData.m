@@ -17,7 +17,7 @@ function cutShotData = cutDataFunc()
     catch ME
         %display any errors that may occur and in a worse case just return
         %the shotData from the base workspace
-        disp(ME)
+        %disp(ME)
         cutShotData = evalin('base','shotData');
     end
 end
