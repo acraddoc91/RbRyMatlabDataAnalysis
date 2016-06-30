@@ -23,9 +23,17 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
      dummyFileNumIndex = strfind(splitInformString,'FileNumber');
      fileIndex = find(not(cellfun('isempty', dummyFileNumIndex)));
      fileNumSplit = strsplit(char(splitInformString(fileIndex)),'=');
+     dummyMagIndex = strfind(splitInformString,'Magnification');
+     magIndex = find(not(cellfun('isempty', dummyMagIndex)));
+     magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
+     shotStructure.Magnification = str2double(magSplit(2));
      if writeExperimentalVarsToFile
          h5create(filename,'/Experimental Variables/Index',1);
          h5write(filename,'/Experimental Variables/Index',str2double(fileNumSplit(2)));
+         try
+             h5create(filename,'/Experimental Variables/Magnification',1);
+             h5write(filename,'/Experimental Variables/Magnification',shotStructure.Magnification);
+         end
      end
      shotStructure.Index = str2double(fileNumSplit(2));
      shotStructure.filePath = filename;
