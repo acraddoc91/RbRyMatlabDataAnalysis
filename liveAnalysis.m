@@ -22,7 +22,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 30-Jun-2016 11:07:32
+    % Last Modified by GUIDE v2.5 30-Jun-2016 13:44:36
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -163,3 +163,12 @@ function openCutter_Callback(hObject, eventdata, handles)
 %Start curve fitting session with current data
 function fitButton_Callback(hObject, eventdata, handles)
     cftool([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)]);
+
+
+% --- Executes on button press in saveSessButton.
+function saveSessButton_Callback(hObject, eventdata, handles)
+    [filename,pathname] = uiputfile;
+    totfilename = strcat(pathname,filename);
+    cutTable = evalin('base','cutTable');
+    shotData = evalin('base','shotData');
+    save(totfilename,'cutTable','shotData');
