@@ -1,4 +1,4 @@
-function cutShotData = cutDataFunc()
+function cutShotData = grabCutData()
     %Will perform cuts on shotData given a cutTable on the base workspace
     try
         %grab the base workspace cutTable and shotData
@@ -11,7 +11,7 @@ function cutShotData = cutDataFunc()
         %%I may want to find a cleaner way to do
         %%this but for the moment this seems to be the easiest
         for i=1:numCuts
-            evalString = sprintf('cutShotData(find([cutShotData.%s] %s))',char(cutTable(i,1)),char(cutTable(i,2)));
+            evalString = sprintf('cutShotData(find([cutShotData.%s] %s%s))',char(cutTable(i,1)),char(cutTable(i,2)),char(cutTable(i,3)));
             cutShotData = eval(evalString);
         end
     catch ME

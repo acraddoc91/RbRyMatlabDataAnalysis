@@ -130,7 +130,7 @@ function refitButton_Callback(hObject, eventdata, handles)
     %Get number of point to refit and open up the refit gui to do fit
     axes(handles.livePlot);
     refitIndexNum = selectdata('SelectionMode','Closest');
-    refitter(refitIndexNum);
+    fitter(refitIndexNum);
 
 
 %Makes a popout figure from the plot currently being viewed for
