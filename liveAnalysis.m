@@ -22,7 +22,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 28-Jun-2016 19:01:02
+    % Last Modified by GUIDE v2.5 30-Jun-2016 11:07:32
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -158,3 +158,8 @@ function loadFromFile_Callback(hObject, eventdata, handles)
 %Opens up data cutter GUI
 function openCutter_Callback(hObject, eventdata, handles)
     cutter(fieldnames(handles.shotData))
+
+
+%Start curve fitting session with current data
+function fitButton_Callback(hObject, eventdata, handles)
+    cftool([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)]);
