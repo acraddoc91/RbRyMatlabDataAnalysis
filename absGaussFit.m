@@ -63,7 +63,7 @@ classdef absGaussFit < basicFittingClass
             [~,ysiz]=size(processedImage);
             if(self.centreY-10 < 1)
                 xVec = sum(processedImage(:,1:self.centreY+10),2)/(self.centreY+10);
-            elseif(self.centreX+10 > ysiz)
+            elseif(self.centreY+10 > ysiz)
                 xVec = sum(processedImage(:,self.centreY-10:ysiz),2)/(ysiz-self.centreY+10);
             else
                 xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
