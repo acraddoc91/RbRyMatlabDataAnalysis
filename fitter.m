@@ -50,7 +50,8 @@ function fitter_OpeningFcn(hObject, eventdata, handles, varargin)
     guidata(hObject, handles);
     if length(varargin) == 1
         handles.indexNum = varargin{1};
-        loadFile(hObject,handles);
+        handles = loadFile(hObject,handles);
+        runFit_Callback(hObject, eventdata, handles)
     end
 
 % --- Outputs from this function are returned to the command line.
@@ -103,6 +104,7 @@ function fitType_CreateFcn(hObject, eventdata, handles)
 function runFit_Callback(hObject, eventdata, handles)
     %determine what fit type we are doing
     fitType = get(handles.fitType,'Value');
+    fitType
     switch fitType
         %gaussian fit case
         case 1
@@ -141,6 +143,8 @@ function runFit_Callback(hObject, eventdata, handles)
             handles.fitVars = fit.getFitVars();
             %Set Atom number
             set(handles.atomNum,'String',handles.fitVars.N_atoms);
+            %Set fit type
+            handles.fitType = 'absGaussFit';
             %save handles information
             guidata(hObject,handles);
             %rescale the centre for the rescaled image
@@ -190,11 +194,12 @@ function saveVals_Callback(hObject, eventdata, handles)
     for i=1:length(fitFieldNames)
         shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
+    shotData(handles.indexNum).fitType = handles.fitType;
     %Write new shotData to workspace
     assignin('base','shotData',shotData);
     
 %function to load shot for refitting    
-function loadFile(hObject,handles)
+function handles = loadFile(hObject,handles)
     %import shotData to grab filename
     shotData = grabCutData;
     set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
@@ -215,6 +220,10 @@ function loadFile(hObject,handles)
     handles.scaleX = procImageSize(1)/1080;
     handles.roiRect_pix = [1,1,procImageSize(1),procImageSize(2)];
     handles.currShotData = shotData(handles.indexNum);
+    %determine initial fit type
+    if strcmp(handles.currShotData.fitType,'absGaussFit')
+        set(handles.fitType,'Value',1);
+    end
     %save all handles information
     guidata(hObject,handles)
 

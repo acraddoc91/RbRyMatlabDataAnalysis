@@ -73,6 +73,7 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
             shotStructure.(char(centreNames(i))) = centreCoords.(char(centreNames(i)));
         end
         fitDone = true;
+        shotStructure.fitType = 'absGaussFit';
     end
     
     %Write variables gathered from fit to file if necessary
