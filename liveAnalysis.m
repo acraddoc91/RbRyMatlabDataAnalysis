@@ -110,7 +110,8 @@ function GUIUpdate(timerObj,eventdata,hObject)
         ylabel(handles.livePlot,handles.yField,'Interpreter','none');
     end
     if get(handles.mostRecentImage,'Value')
-        %show image of most recent shot in shotData
+        %check to see if there are any new shots in shotData and update
+        %displayed image if necessary
         newMaxIndexAct = length([shotIn.Index]);
         if newMaxIndexAct > handles.imageIndexAct
             handles.imageIndexAct = newMaxIndexAct;
@@ -119,15 +120,20 @@ function GUIUpdate(timerObj,eventdata,hObject)
     end
     guidata(hObject,handles)
 
+%function to update the displayed shot image
 function updateImage(hObject,handles)
+    %grab shot filename from index
     fullFilename = char(handles.shotData(handles.imageIndexAct).filePath);
+    %check shot fit type and get appropriate processed image
     if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
         dummyFit = absGaussFit;
-        dummyFit.loadFromFile(fullFilename);
-        handles.processedImage = dummyFit.getProcessedImage;
-        axes(handles.imageViewer);
-        handles.procImageViewer = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
     end
+    dummyFit.loadFromFile(fullFilename);
+    handles.processedImage = dummyFit.getProcessedImage;
+    axes(handles.imageViewer);
+    %rotate image 90 degrees clockwise as Matlab seems to show 1920x1080 as
+    %1080x1920 which looks funky
+    handles.procImageViewer = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
 
@@ -196,7 +202,9 @@ function saveSessButton_Callback(hObject, eventdata, handles)
 
 % --- Executes on selection change in imageIndexList.
 function imageIndexList_Callback(hObject, eventdata, handles)
+    %turn off most recent image tracking
     set(handles.mostRecentImage,'Value',0);
+    %get index of image from index list and display image
     handles.imageIndexAct = get(handles.imageIndexList,'Value');
     guidata(hObject,handles);
     updateImage(hObject,handles);
@@ -227,7 +235,9 @@ function mostRecentImage_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in imagFromPlot.
 function imagFromPlot_Callback(hObject, eventdata, handles)
+    %turn off tracking most recent image
     set(handles.mostRecentImage,'Value',0);
+    %grab data point to display image for and display image
     axes(handles.livePlot);
     handles.imageIndexAct = selectdata('SelectionMode','Closest');
     guidata(hObject,handles);

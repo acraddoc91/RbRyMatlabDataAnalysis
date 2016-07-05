@@ -48,8 +48,10 @@ function varargout = fitter(varargin)
 function fitter_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     guidata(hObject, handles);
+    %check to see if fitter was called with an index passed to it
     if length(varargin) == 1
         handles.indexNum = varargin{1};
+        %load file and do initial fit
         handles = loadFile(hObject,handles);
         runFit_Callback(hObject, eventdata, handles)
     end
