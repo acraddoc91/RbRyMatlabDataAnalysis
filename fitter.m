@@ -104,7 +104,6 @@ function fitType_CreateFcn(hObject, eventdata, handles)
 function runFit_Callback(hObject, eventdata, handles)
     %determine what fit type we are doing
     fitType = get(handles.fitType,'Value');
-    fitType
     switch fitType
         %gaussian fit case
         case 1

@@ -22,7 +22,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 30-Jun-2016 13:44:36
+    % Last Modified by GUIDE v2.5 05-Jul-2016 16:11:27
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -51,11 +51,11 @@ function liveAnalysis_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.variables = {};
     handles.xField = '';
     handles.yField = '';
+    handles.imageIndexAct = 0;
     guidata(hObject, handles);
     handles.timer = timer('ExecutionMode','fixedRate','Period', 0.1,'TimerFcn', {@GUIUpdate,hObject});
     start(handles.timer);
     handles.output = hObject;
-
     % Update handles structure
     guidata(hObject, handles);
 
@@ -94,6 +94,7 @@ function GUIUpdate(timerObj,eventdata,hObject)
         %Grab the data from the base workspace and update the live plot
         %based on the fields selected
         shotIn = grabCutData;
+        set(handles.imageIndexList,'String',[shotIn.Index]);
         if isequal(shotIn,handles.shotData) ~= 1
             if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
                 handles.variables = fieldnames(shotIn);
@@ -107,9 +108,28 @@ function GUIUpdate(timerObj,eventdata,hObject)
         handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
         xlabel(handles.livePlot,handles.xField,'Interpreter','none');
         ylabel(handles.livePlot,handles.yField,'Interpreter','none');
-        guidata(hObject,handles)
     end
+    if get(handles.mostRecentImage,'Value')
+        %show image of most recent shot in shotData
+        newMaxIndexAct = length([shotIn.Index]);
+        if newMaxIndexAct > handles.imageIndexAct
+            handles.imageIndexAct = newMaxIndexAct;
+            updateImage(hObject,handles)
+        end
+    end
+    guidata(hObject,handles)
 
+function updateImage(hObject,handles)
+    fullFilename = char(handles.shotData(handles.imageIndexAct).filePath);
+    if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
+        dummyFit = absGaussFit;
+        dummyFit.loadFromFile(fullFilename);
+        handles.processedImage = dummyFit.getProcessedImage;
+        axes(handles.imageViewer);
+        handles.procImageViewer = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
+    end
+    set(handles.imageIndexList,'Value',handles.imageIndexAct);
+    guidata(hObject,handles);
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)
@@ -172,3 +192,43 @@ function saveSessButton_Callback(hObject, eventdata, handles)
     cutTable = evalin('base','cutTable');
     shotData = evalin('base','shotData');
     save(totfilename,'cutTable','shotData');
+
+
+% --- Executes on selection change in imageIndexList.
+function imageIndexList_Callback(hObject, eventdata, handles)
+    set(handles.mostRecentImage,'Value',0);
+    handles.imageIndexAct = get(handles.imageIndexList,'Value');
+    guidata(hObject,handles);
+    updateImage(hObject,handles);
+    
+
+
+% --- Executes during object creation, after setting all properties.
+function imageIndexList_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to imageIndexList (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in mostRecentImage.
+function mostRecentImage_Callback(hObject, eventdata, handles)
+% hObject    handle to mostRecentImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of mostRecentImage
+
+
+% --- Executes on button press in imagFromPlot.
+function imagFromPlot_Callback(hObject, eventdata, handles)
+    set(handles.mostRecentImage,'Value',0);
+    axes(handles.livePlot);
+    handles.imageIndexAct = selectdata('SelectionMode','Closest');
+    guidata(hObject,handles);
+    updateImage(hObject,handles);
