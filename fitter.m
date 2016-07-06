@@ -104,7 +104,6 @@ function fitType_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in runFit.
 function runFit_Callback(hObject, eventdata, handles)
-    handles
     %determine what fit type we are doing
     fitType = get(handles.fitType,'Value');
     switch fitType
@@ -189,14 +188,15 @@ function repaintMarker(hObject,handles,markerCentreX,markerCentreY)
 function saveVals_Callback(hObject, eventdata, handles)
     %Pull in the shotData from the base workspace
     shotData = evalin('base','shotData');
+    outGoingIndexNum = find([shotData.Index]==handles.indexNumAct);
     %Update shotData with new values
-    shotData(handles.indexNum).centreX_pix = handles.centreX_pix;
-    shotData(handles.indexNum).centreY_pix = handles.centreY_pix;
+    shotData(outGoingIndexNum).centreX_pix = handles.centreX_pix;
+    shotData(outGoingIndexNum).centreY_pix = handles.centreY_pix;
     fitFieldNames = fieldnames(handles.fitVars);
     for i=1:length(fitFieldNames)
-        shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
+        shotData(outGoingIndexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
-    shotData(handles.indexNum).fitType = handles.fitTypeString;
+    shotData(outGoingIndexNum).fitType = handles.fitTypeString;
     %Write new shotData to workspace
     assignin('base','shotData',shotData);
     
@@ -204,6 +204,7 @@ function saveVals_Callback(hObject, eventdata, handles)
 function handles = loadFile(hObject,handles)
     %import shotData to grab filename
     shotData = grabCutData;
+    handles.indexNumAct = shotData(handles.indexNum).Index;
     set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
     fullFilename = char(shotData(handles.indexNum).filePath);
     set(handles.filepathDisp,'String',fullFilename);
