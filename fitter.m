@@ -104,6 +104,7 @@ function fitType_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in runFit.
 function runFit_Callback(hObject, eventdata, handles)
+    handles
     %determine what fit type we are doing
     fitType = get(handles.fitType,'Value');
     switch fitType
@@ -145,7 +146,7 @@ function runFit_Callback(hObject, eventdata, handles)
             %Set Atom number
             set(handles.atomNum,'String',handles.fitVars.N_atoms);
             %Set fit type
-            handles.fitType = 'absGaussFit';
+            handles.fitTypeString = 'absGaussFit';
             %save handles information
             guidata(hObject,handles);
             %rescale the centre for the rescaled image
@@ -195,7 +196,7 @@ function saveVals_Callback(hObject, eventdata, handles)
     for i=1:length(fitFieldNames)
         shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
-    shotData(handles.indexNum).fitType = handles.fitType;
+    shotData(handles.indexNum).fitType = handles.fitTypeString;
     %Write new shotData to workspace
     assignin('base','shotData',shotData);
     
