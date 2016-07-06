@@ -1,24 +1,4 @@
 function varargout = liveAnalysis(varargin)
-    % LIVEANALYSIS MATLAB code for liveAnalysis.fig
-    %      LIVEANALYSIS, by itself, creates a new LIVEANALYSIS or raises the existing
-    %      singleton*.
-    %
-    %      H = LIVEANALYSIS returns the handle to a new LIVEANALYSIS or the handle to
-    %      the existing singleton*.
-    %
-    %      LIVEANALYSIS('CALLBACK',hObject,eventData,handles,...) calls the local
-    %      function named CALLBACK in LIVEANALYSIS.M with the given input arguments.
-    %
-    %      LIVEANALYSIS('Property','Value',...) creates a new LIVEANALYSIS or raises the
-    %      existing singleton*.  Starting from the left, property value pairs are
-    %      applied to the GUI before liveAnalysis_OpeningFcn gets called.  An
-    %      unrecognized property name or invalid value makes property application
-    %      stop.  All inputs are passed to liveAnalysis_OpeningFcn via varargin.
-    %
-    %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-    %      instance to run (singleton)".
-    %
-    % See also: GUIDE, GUIDATA, GUIHANDLES
 
     % Edit the above text to modify the response to help liveAnalysis
 
@@ -53,7 +33,7 @@ function liveAnalysis_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.yField = '';
     handles.imageIndexAct = 0;
     guidata(hObject, handles);
-    handles.timer = timer('ExecutionMode','fixedRate','Period', 0.1,'TimerFcn', {@GUIUpdate,hObject});
+    handles.timer = timer('ExecutionMode','fixedRate','Period', 0.3,'TimerFcn', {@GUIUpdate,hObject});
     start(handles.timer);
     handles.output = hObject;
     % Update handles structure
@@ -94,7 +74,16 @@ function GUIUpdate(timerObj,eventdata,hObject)
         %Grab the data from the base workspace and update the live plot
         %based on the fields selected
         shotIn = grabCutData;
-        set(handles.imageIndexList,'String',[shotIn.Index]);
+        %Update image index list. Check to make sure the current index is
+        %not out of bounds for the new string
+        if handles.imageIndexAct <= length(shotIn)
+            set(handles.imageIndexList,'String',[shotIn.Index]);
+        else
+            handles.imageIndexAct = length(shotIn);
+            set(handles.imageIndexList,'Value',handles.imageIndexAct);
+            set(handles.imageIndexList,'String',[shotIn.Index]);
+            updateImage(hObject,handles);
+        end
         if isequal(shotIn,handles.shotData) ~= 1
             if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
                 handles.variables = fieldnames(shotIn);
@@ -109,13 +98,15 @@ function GUIUpdate(timerObj,eventdata,hObject)
         xlabel(handles.livePlot,handles.xField,'Interpreter','none');
         ylabel(handles.livePlot,handles.yField,'Interpreter','none');
     end
-    if get(handles.mostRecentImage,'Value')
-        %check to see if there are any new shots in shotData and update
-        %displayed image if necessary
-        newMaxIndexAct = length([shotIn.Index]);
-        if newMaxIndexAct > handles.imageIndexAct
-            handles.imageIndexAct = newMaxIndexAct;
-            updateImage(hObject,handles)
+    try
+        if get(handles.mostRecentImage,'Value')
+            %check to see if there are any new shots in shotData and update
+            %displayed image if necessary
+            newMaxIndexAct = length([shotIn.Index]);
+            if newMaxIndexAct > handles.imageIndexAct
+                handles.imageIndexAct = newMaxIndexAct;
+                updateImage(hObject,handles)
+            end
         end
     end
     guidata(hObject,handles)
