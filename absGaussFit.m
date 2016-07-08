@@ -118,6 +118,8 @@ classdef absGaussFit < basicFittingClass
             hold off
             xlabel('Distance in X direction (\mum)')
             ylabel('OD')
+            self.xCoffs(4)*self.pixSize
+            self.magnification
             legend('x-data',sprintf('\\sigma_x = %.0f\\mum',self.xCoffs(4)*self.pixSize * self.magnification),'Location','southwest');
             legend('boxoff');
         end
