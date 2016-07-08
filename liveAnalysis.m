@@ -109,15 +109,6 @@ function GUIUpdate(timerObj,eventdata,hObject)
             end
         end
     end
-    %check if figure closed and if so delete handles.popfig & popfigAxes and set popout
-    %button text back
-    if isfield(handles,'popfig')
-        if ishandle(handles.popfig) == 0
-            set(handles.popoutButton,'String','Popout figure');
-            handles = rmfield(handles,'popfig');
-            handles = rmfield(handles,'popfigAxes');
-        end
-    end
     guidata(hObject,handles)
 
 %function to update the displayed shot image
@@ -130,9 +121,10 @@ function updateImage(hObject,handles)
     end
     dummyFit.loadFromFile(fullFilename);
     handles.processedImage = dummyFit.getProcessedImage;
+    axes(handles.imageViewer);
     %rotate image 90 degrees clockwise as Matlab seems to show 1920x1080 as
     %1080x1920 which looks funky
-    handles.procImageViewer = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.imageViewer);
+    handles.procImageViewer = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
 
@@ -161,23 +153,10 @@ function refitButton_Callback(hObject, eventdata, handles)
 %Makes a popout figure from the plot currently being viewed for
 %manipulation
 function popoutButton_Callback(hObject, eventdata, handles)
-    %Check if there is already a popout figure
-    if isfield(handles,'popfig')
-        %If so add new data to current popout figure
-        axes(handles.popfigAxes);
-        hold all
-        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
-        hold off
-    else
-        %If not plot a new figure
-        handles.popfig = figure;
-        handles.popfigAxes = axes;
-        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
-        xlabel(handles.xField,'Interpreter','none');
-        ylabel(handles.yField,'Interpreter','none');
-        set(handles.popoutButton,'String','Add to pop fig');
-    end
-    guidata(hObject,handles);
+    popfig = figure;
+    plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+    xlabel(handles.xField,'Interpreter','none');
+    ylabel(handles.yField,'Interpreter','none');
 
 
 %Allows user to load data from file
