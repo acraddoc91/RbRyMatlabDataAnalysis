@@ -1,26 +1,4 @@
 function varargout = fitter(varargin)
-    % FITTER MATLAB code for fitter.fig
-    %      FITTER, by itself, creates a new FITTER or raises the existing
-    %      singleton*.
-    %
-    %      H = FITTER returns the handle to a new FITTER or the handle to
-    %      the existing singleton*.
-    %
-    %      FITTER('CALLBACK',hObject,eventData,handles,...) calls the local
-    %      function named CALLBACK in FITTER.M with the given input arguments.
-    %
-    %      FITTER('Property','Value',...) creates a new FITTER or raises the
-    %      existing singleton*.  Starting from the left, property value pairs are
-    %      applied to the GUI before fitter_OpeningFcn gets called.  An
-    %      unrecognized property name or invalid value makes property application
-    %      stop.  All inputs are passed to fitter_OpeningFcn via varargin.
-    %
-    %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-    %      instance to run (singleton)".
-    %
-    % See also: GUIDE, GUIDATA, GUIHANDLES
-
-    % Edit the above text to modify the response to help fitter
 
     % Last Modified by GUIDE v2.5 30-Jun-2016 13:06:08
 
