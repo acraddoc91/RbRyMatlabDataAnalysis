@@ -106,7 +106,7 @@ classdef absGaussFit < basicFittingClass
             [~,ysiz]=size(processedImage);
             if(self.centreY-10 < 1)
                 xVec = sum(processedImage(:,1:self.centreY+10),2)/(self.centreY+10);
-            elseif(self.centreX+10 > ysiz)
+            elseif(self.centreY+10 > ysiz)
                 xVec = sum(processedImage(:,self.centreY-10:ysiz),2)/(ysiz-self.centreY+10);
             else
                 xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
@@ -155,6 +155,7 @@ classdef absGaussFit < basicFittingClass
             fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize*self.magnification;
             fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize*self.magnification;
             fitVars.('N_atoms') = self.getAtomNumber;
+            fitVars.('rotAngle') = self.getRotationAngle;
         end
         %Function to set the magnification of the lens system used to
         %produce the shot

@@ -8,6 +8,7 @@ classdef basicFittingClass < handle
     properties
         processedImage = 0;
         roiPoints;
+        rotationAngle=0;
     end
     
     %And some methods which should be general to all fitting classes
@@ -23,7 +24,8 @@ classdef basicFittingClass < handle
         end
         %Get the processed image
         function procImageOut = getProcessedImage(self)
-            procImageOut = self.processedImage(self.roiPoints(1):(self.roiPoints(1)+self.roiPoints(3)-1),self.roiPoints(2):(self.roiPoints(2)+self.roiPoints(4)-1));
+            rotImage = imrotate(self.processedImage,self.rotationAngle);
+            procImageOut = rotImage(self.roiPoints(1):(self.roiPoints(1)+self.roiPoints(3)-1),self.roiPoints(2):(self.roiPoints(2)+self.roiPoints(4)-1));
         end
         %return the region of interest
         function roiOut = getROI(self)
@@ -32,6 +34,12 @@ classdef basicFittingClass < handle
         %set the region of interest
         function setRoi(self,roiIn)
             self.roiPoints = roiIn;
+        end
+        function setRotationAngle(self,rotationAngle)
+            self.rotationAngle = rotationAngle; 
+        end
+        function rotAngleOut = getRotationAngle(self)
+            rotAngleOut = self.rotationAngle;
         end
     end
 end
