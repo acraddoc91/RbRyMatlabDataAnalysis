@@ -1,28 +1,6 @@
 function varargout = fitter(varargin)
-    % FITTER MATLAB code for fitter.fig
-    %      FITTER, by itself, creates a new FITTER or raises the existing
-    %      singleton*.
-    %
-    %      H = FITTER returns the handle to a new FITTER or the handle to
-    %      the existing singleton*.
-    %
-    %      FITTER('CALLBACK',hObject,eventData,handles,...) calls the local
-    %      function named CALLBACK in FITTER.M with the given input arguments.
-    %
-    %      FITTER('Property','Value',...) creates a new FITTER or raises the
-    %      existing singleton*.  Starting from the left, property value pairs are
-    %      applied to the GUI before fitter_OpeningFcn gets called.  An
-    %      unrecognized property name or invalid value makes property application
-    %      stop.  All inputs are passed to fitter_OpeningFcn via varargin.
-    %
-    %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-    %      instance to run (singleton)".
-    %
-    % See also: GUIDE, GUIDATA, GUIHANDLES
 
-    % Edit the above text to modify the response to help fitter
-
-    % Last Modified by GUIDE v2.5 30-Jun-2016 13:06:08
+    % Last Modified by GUIDE v2.5 11-Jul-2016 12:56:12
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -47,14 +25,19 @@ function varargout = fitter(varargin)
 % --- Executes just before fitter is made visible.
 function fitter_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
-    guidata(hObject, handles);
+    handles.rotDegreeVal = 0;
+    handles.angleUpdate = false;
     %check to see if fitter was called with an index passed to it
     if length(varargin) == 1
         handles.indexNum = varargin{1};
         %load file and do initial fit
         handles = loadFile(hObject,handles);
-        runFit_Callback(hObject, eventdata, handles)
+        handles = runFit_Callback(hObject, eventdata, handles);
+        guidata(hObject,handles);
     end
+    handles.timer = timer('ExecutionMode','fixedRate','Period', 0.3,'TimerFcn', {@GUIUpdate,hObject});
+    start(handles.timer);
+    guidata(hObject, handles);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = fitter_OutputFcn(hObject, eventdata, handles) 
@@ -103,7 +86,7 @@ function fitType_CreateFcn(hObject, eventdata, handles)
 
 
 % --- Executes on button press in runFit.
-function runFit_Callback(hObject, eventdata, handles)
+function handles = runFit_Callback(hObject, eventdata, handles)
     %determine what fit type we are doing
     fitType = get(handles.fitType,'Value');
     switch fitType
@@ -116,6 +99,7 @@ function runFit_Callback(hObject, eventdata, handles)
                 fit.setMagnification(handles.currShotData.Magnification);
             catch
             end
+            fit.setRotationAngle(handles.rotDegreeVal);
             %determine if we want to manually specify centre coordinates
             manCords = get(handles.centreSelection,'Value');
             %Set ROI
@@ -145,15 +129,16 @@ function runFit_Callback(hObject, eventdata, handles)
             %Set Atom number
             set(handles.atomNum,'String',handles.fitVars.N_atoms);
             %Set fit type
-            handles.fitType = 'absGaussFit';
+            handles.fitTypeString = 'absGaussFit';
             %save handles information
             guidata(hObject,handles);
             %rescale the centre for the rescaled image
-            markerCentreX = handles.centreX_pix/handles.scaleX;
-            markerCentreY = handles.centreY_pix/handles.scaleY;
+            markerCentreX = handles.centreX_pix;
+            markerCentreY = handles.centreY_pix;
             %redraw the marker with new centre point
-            repaintMarker(hObject,handles,markerCentreX,markerCentreY);
+            handles = repaintMarker(hObject,handles,markerCentreX,markerCentreY);
     end
+    guidata(hObject,handles);
 
 % --- Executes on mouse motion over figure - except title and menu.
 function figure1_WindowButtonMotionFcn(hObject, eventdata, handles)
@@ -163,14 +148,14 @@ function setMiddle_Callback(hObject, eventdata, handles)
     %set the axes to the cloud image
     axes(handles.procImage);
     %get the location of the centre point mouse click
-    [markerCentreY,markerCentreX] = ginput(1);
-    handles.centreX_pix = markerCentreX*handles.scaleX;
-    handles.centreY_pix = markerCentreY*handles.scaleY;
+    [markerCentreX,markerCentreY] = ginput(1);
+    handles.centreX_pix = markerCentreX;
+    handles.centreY_pix = markerCentreY;
     %repaint the marker to represent the new set point
-    repaintMarker(hObject,handles,markerCentreX,markerCentreY)
+    repaintMarker(hObject,handles,markerCentreX,markerCentreY);
 
 %Function to redraw the cloud centre marker
-function repaintMarker(hObject,handles,markerCentreX,markerCentreY)
+function handles = repaintMarker(hObject,handles,markerCentreX,markerCentreY)
     %make sure we are drawing on the image axes
     axes(handles.procImage);
     %delete any previous markers
@@ -179,23 +164,24 @@ function repaintMarker(hObject,handles,markerCentreX,markerCentreY)
     end
     hold on;
     %write the new marker
-    handles.marker = plot(markerCentreY,markerCentreX,'r+','MarkerSize',30);
-    guidata(hObject,handles);
+    handles.marker = plot(markerCentreX,markerCentreY,'r+','MarkerSize',30);
     hold off;
+    guidata(hObject,handles);
 
 
 %Save fitted data to shotData in the base workspace
 function saveVals_Callback(hObject, eventdata, handles)
     %Pull in the shotData from the base workspace
     shotData = evalin('base','shotData');
+    outGoingIndexNum = find([shotData.Index]==handles.indexNumAct);
     %Update shotData with new values
-    shotData(handles.indexNum).centreX_pix = handles.centreX_pix;
-    shotData(handles.indexNum).centreY_pix = handles.centreY_pix;
+    shotData(outGoingIndexNum).centreX_pix = handles.centreX_pix;
+    shotData(outGoingIndexNum).centreY_pix = handles.centreY_pix;
     fitFieldNames = fieldnames(handles.fitVars);
     for i=1:length(fitFieldNames)
-        shotData(handles.indexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
+        shotData(outGoingIndexNum).(char(fitFieldNames(i))) = handles.fitVars.(char(fitFieldNames(i)));
     end
-    shotData(handles.indexNum).fitType = handles.fitType;
+    shotData(outGoingIndexNum).fitType = handles.fitTypeString;
     %Write new shotData to workspace
     assignin('base','shotData',shotData);
     
@@ -203,23 +189,20 @@ function saveVals_Callback(hObject, eventdata, handles)
 function handles = loadFile(hObject,handles)
     %import shotData to grab filename
     shotData = grabCutData;
+    handles.indexNumAct = shotData(handles.indexNum).Index;
     set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
     fullFilename = char(shotData(handles.indexNum).filePath);
     set(handles.filepathDisp,'String',fullFilename);
     %grab pictures from file and get processed image
     %(log(absorption-background)/(probe-background))
-    absorption = double(h5read(fullFilename,'/Images/Absorption'));
-    probe = double(h5read(fullFilename,'/Images/Probe'));
-    background = double(h5read(fullFilename,'/Images/Background'));
-    handles.processedImage = real(log((absorption-background)./(probe-background)));
+    dummyFit = absGaussFit;
+    dummyFit.loadFromFile(fullFilename);
+    handles.processedImage = dummyFit.getProcessedImage;
     %plot the processed image to the procImage axes
     axes(handles.procImage);
-    handles.procImageResize = imshow(imresize(handles.processedImage,[1080 1080]),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
-    %determine image scaling relative to axes1
-    procImageSize = size(handles.processedImage);
-    handles.scaleY = procImageSize(2)/1080;
-    handles.scaleX = procImageSize(1)/1080;
-    handles.roiRect_pix = [1,1,procImageSize(1),procImageSize(2)];
+    handles.procImageResize = imshow(handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
+    %Set initial ROI, note fliplr is required as the imcrop function is weird;
+    handles.roiRect_pix = [1,1,fliplr(size(handles.processedImage))];
     handles.currShotData = shotData(handles.indexNum);
     %determine initial fit type
     if strcmp(handles.currShotData.fitType,'absGaussFit')
@@ -236,7 +219,7 @@ function roiSetter_Callback(hObject, eventdata, handles)
     %get cropped image
     [~,roiRect] = imcrop();
     %Figure out scaling rounding to nearest integer
-    handles.roiRect_pix = [ceil(roiRect(2)*handles.scaleX),ceil(roiRect(1)*handles.scaleY),floor(roiRect(4)*handles.scaleX),floor(roiRect(3)*handles.scaleY)];
+    handles.roiRect_pix = [ceil(roiRect(1)),ceil(roiRect(2)),floor(roiRect(3)),floor(roiRect(4))];
     guidata(hObject,handles);
     %Repaint the ROI rectangle
     repaintROIRectangle(hObject,handles,roiRect);
@@ -256,3 +239,47 @@ function repaintROIRectangle(hObject,handles,roiRectangle)
     handles.roiImageRectangle = rectangle('Position',roiRectangle);
     guidata(hObject,handles);
     hold off
+
+
+% --- Executes on slider movement.
+function rotSlider_Callback(hObject, eventdata, handles)
+    %Set the rotation degree value in handles and update the rotation angle
+    %indicator
+    handles.rotDegreeVal = get(handles.rotSlider,'Value')*180;
+    set(handles.rotDegree,'String',strcat(num2str(handles.rotDegreeVal),'°'));
+    %Tell the updater that the image needs to be rotated
+    handles.angleUpdate = true;
+    guidata(hObject,handles);
+
+% --- Executes during object creation, after setting all properties.
+function rotSlider_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rotSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: slider controls usually have a light gray background.
+    if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+        set(hObject,'BackgroundColor',[.9 .9 .9]);
+    end
+
+%Runs periodically to update stuff from the GUI    
+function GUIUpdate(timerObj,eventdata,hObject)
+    handles = guidata(hObject);
+    %Check if the rotation angle has been changed and if so update image
+    if handles.angleUpdate
+        rotatedImage = imrotate(handles.processedImage,+handles.rotDegreeVal);
+        handles.procImageResize = imshow(rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.procImage);
+        handles.roiRect_pix = [1,1,fliplr(size(rotatedImage))];
+        handles.angleUpdate = false;
+    end
+    guidata(hObject,handles);
+
+
+% --- Executes when user attempts to close figure1.
+function figure1_CloseRequestFcn(hObject, eventdata, handles)
+    if strcmp(get(handles.timer, 'Running'), 'on')
+        stop(handles.timer);
+    end
+    % Destroy timer
+    delete(handles.timer)
+    delete(hObject);

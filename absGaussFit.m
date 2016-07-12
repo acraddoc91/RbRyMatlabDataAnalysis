@@ -20,9 +20,9 @@ classdef absGaussFit < basicFittingClass
         %Function to load a .h5 file up and extract the processed image
         function loadFromFile(self,filename)
             %Grab the images from file
-            absorption = double(h5read(filename,'/Images/Absorption'));
-            probe = double(h5read(filename,'/Images/Probe'));
-            background = double(h5read(filename,'/Images/Background'));
+            absorption = double(h5readImage(filename,'/Images/Absorption'));
+            probe = double(h5readImage(filename,'/Images/Probe'));
+            background = double(h5readImage(filename,'/Images/Background'));
             %From the absorption, probe and background images get the processed OD
             %image
             self.setProcessedImage(real(log((absorption-background)./(probe-background))));
@@ -46,8 +46,8 @@ classdef absGaussFit < basicFittingClass
         function findCentreCoordinates(self)
             %Sum over the columns and rows respectively to collapse the processed
             %image down into a a vector
-            summedCols = sum(self.getProcessedImage,1);
-            summedRows = sum(self.getProcessedImage,2);
+            summedRows = sum(self.getProcessedImage,1);
+            summedCols = sum(self.getProcessedImage,2);
             %Determine the minimum of this collapsed vector for both columns and
             %rows to find the approximate middle of the cloud.
             [~,minCol] = min(summedRows);
@@ -60,38 +60,38 @@ classdef absGaussFit < basicFittingClass
         %Fit the cloud in the X direction
         function runXFit(self)
             processedImage = self.getProcessedImage();
-            [~,ysiz]=size(processedImage);
+            [ysiz,~]=size(processedImage);
             if(self.centreY-10 < 1)
-                xVec = sum(processedImage(:,1:self.centreY+10),2)/(self.centreY+10);
+                xVec = sum(processedImage(1:self.centreY+10,:),1)/(self.centreY+10);
             elseif(self.centreY+10 > ysiz)
-                xVec = sum(processedImage(:,self.centreY-10:ysiz),2)/(ysiz-self.centreY+10);
+                xVec = sum(processedImage(self.centreY-10:ysiz,:),1)/(ysiz-self.centreY+10);
             else
-                xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+                xVec = sum(processedImage(self.centreY-10:self.centreY+10,:),1)/21;
             end
             self.xCoffs(2) = -min(xVec);
-            xPix = [1:length(xVec)];
+            xPix = transpose([1:length(xVec)]);
             try
                 self.xCoffs = lsqcurvefit(self.gauss,self.xCoffs,xPix,xVec,[],[],self.opts);
-            catch
+            catch ME
                 self.xCoffs = [NaN,NaN,NaN,NaN];
             end
         end
         %Fit the cloud in the Y direction
         function runYFit(self)
             processedImage = self.getProcessedImage();
-            [xsiz,~]=size(processedImage);
+            [~,xsiz]=size(processedImage);
             if(self.centreX-10 < 1)
-                yVec = sum(processedImage(1:self.centreX+10,:),1)/(self.centreX+10);
+                yVec = sum(processedImage(:,1:self.centreX+10),2)/(self.centreX+10);
             elseif(self.centreX+10 > xsiz)
-                yVec = sum(processedImage(self.centreX-10:xsiz,:),1)/(xsiz-self.centreX+10);
+                yVec = sum(processedImage(:,self.centreX-10:xsiz),2)/(xsiz-self.centreX+10);
             else
-                yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+                yVec = sum(processedImage(:,self.centreX-10:self.centreX+10),2)/21;
             end
             self.yCoffs(2) = -min(yVec);
-            yPix = transpose([1:length(yVec)]);
+            yPix = [1:length(yVec)];
             try
                 self.yCoffs = lsqcurvefit(self.gauss,self.yCoffs,yPix,yVec,[],[],self.opts);
-            catch
+            catch ME
                 self.yCoffs = [NaN,NaN,NaN,NaN];
             end
         end
@@ -103,13 +103,13 @@ classdef absGaussFit < basicFittingClass
         %Plot the x directional slice of the cloud with its fit
         function plotX(self)
             processedImage = self.getProcessedImage();
-            [~,ysiz]=size(processedImage);
+            [ysiz,~]=size(processedImage);
             if(self.centreY-10 < 1)
-                xVec = sum(processedImage(:,1:self.centreY+10),2)/(self.centreY+10);
-            elseif(self.centreX+10 > ysiz)
-                xVec = sum(processedImage(:,self.centreY-10:ysiz),2)/(ysiz-self.centreY+10);
+                xVec = sum(processedImage(1:self.centreY+10,:),1)/(self.centreY+10);
+            elseif(self.centreY+10 > ysiz)
+                xVec = sum(processedImage(self.centreY-10:ysiz,:),1)/(ysiz-self.centreY+10);
             else
-                xVec = sum(processedImage(:,self.centreY-10:self.centreY+10),2)/21;
+                xVec = sum(processedImage(self.centreY-10:self.centreY+10,:),1)/21;
             end
             spatialVec = self.pixSize * self.magnification * [1:length(xVec)]- self.pixSize * self.magnification * self.centreX;
             plot(spatialVec,xVec,'.')
@@ -124,13 +124,13 @@ classdef absGaussFit < basicFittingClass
         %Plot the y directional slice of the cloud with its fit
         function plotY(self)
             processedImage = self.getProcessedImage();
-            [xsiz,~]=size(processedImage);
+            [~,xsiz]=size(processedImage);
             if(self.centreX-10 < 1)
-                yVec = sum(processedImage(1:self.centreX+10,:),1)/(self.centreX+10);
+                yVec = sum(processedImage(:,1:self.centreX+10),2)/(self.centreX+10);
             elseif(self.centreX+10 > xsiz)
-                yVec = sum(processedImage(self.centreX-10:xsiz,:),1)/(xsiz-self.centreX+10);
+                yVec = sum(processedImage(:,self.centreX-10:xsiz),2)/(xsiz-self.centreX+10);
             else
-                yVec = sum(processedImage(self.centreX-10:self.centreX+10,:),1)/21;
+                yVec = sum(processedImage(:,self.centreX-10:self.centreX+10),2)/21;
             end
             spatialVec = self.pixSize * self.magnification * [1:length(yVec)]- self.pixSize * self.magnification * self.centreY;
             plot(spatialVec,yVec,'.')
@@ -155,6 +155,7 @@ classdef absGaussFit < basicFittingClass
             fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize*self.magnification;
             fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize*self.magnification;
             fitVars.('N_atoms') = self.getAtomNumber;
+            fitVars.('rotAngle') = self.getRotationAngle;
         end
         %Function to set the magnification of the lens system used to
         %produce the shot
@@ -164,8 +165,8 @@ classdef absGaussFit < basicFittingClass
         function calculateAtomNumber(self,imagingDetuning,imagingIntensity)
             %values for 87Rb D2 line
             gam = 38.116 * 10^6;
-            isat = 1.6692*10^(-3); %W/cm^2 for sigma_\pm polarised light
-            %isat = 2.5033; %W/cm^2 for pi polarised light
+            %isat = 1.6692*10^(-3); %W/cm^2 for sigma_\pm polarised light
+            isat = 2.5033; %W/cm^2 for pi polarised light
             hbar = 1.0545718*10^(-34);
             omega = 2*pi*384.2281152028*10^12;
             sig0 = hbar*omega*gam/(2*isat);
