@@ -195,16 +195,14 @@ function handles = loadFile(hObject,handles)
     set(handles.filepathDisp,'String',fullFilename);
     %grab pictures from file and get processed image
     %(log(absorption-background)/(probe-background))
-    absorption = double(h5read(fullFilename,'/Images/Absorption'));
-    probe = double(h5read(fullFilename,'/Images/Probe'));
-    background = double(h5read(fullFilename,'/Images/Background'));
-    handles.processedImage = real(log((absorption-background)./(probe-background)));
+    dummyFit = absGaussFit;
+    dummyFit.loadFromFile(fullFilename);
+    handles.processedImage = dummyFit.getProcessedImage;
     %plot the processed image to the procImage axes
     axes(handles.procImage);
-    handles.procImageResize = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
-    %determine image scaling relative to axes1
-    procImageSize = size(handles.processedImage);
-    handles.roiRect_pix = [1,1,procImageSize(1),procImageSize(2)];
+    handles.procImageResize = imshow(handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
+    %Set initial ROI, note fliplr is required as the imcrop function is weird;
+    handles.roiRect_pix = [1,1,fliplr(size(handles.processedImage))];
     handles.currShotData = shotData(handles.indexNum);
     %determine initial fit type
     if strcmp(handles.currShotData.fitType,'absGaussFit')
@@ -270,8 +268,8 @@ function GUIUpdate(timerObj,eventdata,hObject)
     %Check if the rotation angle has been changed and if so update image
     if handles.angleUpdate
         rotatedImage = imrotate(handles.processedImage,+handles.rotDegreeVal);
-        handles.procImageResize = imshow(imrotate(rotatedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.procImage);
-        handles.roiRect_pix = [1,1,size(rotatedImage)];
+        handles.procImageResize = imshow(rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.procImage);
+        handles.roiRect_pix = [1,1,fliplr(size(rotatedImage))];
         handles.angleUpdate = false;
     end
     guidata(hObject,handles);

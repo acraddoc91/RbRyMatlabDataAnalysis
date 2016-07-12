@@ -130,9 +130,7 @@ function updateImage(hObject,handles)
     end
     dummyFit.loadFromFile(fullFilename);
     handles.processedImage = dummyFit.getProcessedImage;
-    %rotate image 90 degrees clockwise as Matlab seems to show 1920x1080 as
-    %1080x1920 which looks funky
-    handles.procImageViewer = imshow(imrotate(handles.processedImage,-90),'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.imageViewer);
+    handles.procImageViewer = imshow(handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.imageViewer);
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
 

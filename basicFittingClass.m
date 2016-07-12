@@ -15,8 +15,14 @@ classdef basicFittingClass < handle
     methods
         %Set the processed image of our object to that passed in the method
         function setProcessedImage(self,procImageIn)
+            %remove infinities and NaNs which screw things up
+            procImageIn(isinf(procImageIn))=0;
+            procImageIn(isnan(procImageIn))=0;
             self.processedImage = procImageIn;
-            self.roiPoints = [1,1,size(self.processedImage)];
+            %fliplr function needed as imcrop function operates weirdly and
+            %requires the indicies in the order [x,y,width,height] which is
+            %the opposite order to the way the size function operates
+            self.roiPoints = [1,1,fliplr(size(self.processedImage))];
         end
         %Do a contour plot of the processed image
         function plotProcessedImage(self)
@@ -24,8 +30,10 @@ classdef basicFittingClass < handle
         end
         %Get the processed image
         function procImageOut = getProcessedImage(self)
+            %rotate the image by the rotation angle and apply the ROI to
+            %give the output
             rotImage = imrotate(self.processedImage,self.rotationAngle);
-            procImageOut = rotImage(self.roiPoints(1):(self.roiPoints(1)+self.roiPoints(3)-1),self.roiPoints(2):(self.roiPoints(2)+self.roiPoints(4)-1));
+            procImageOut = imcrop(rotImage,self.roiPoints);
         end
         %return the region of interest
         function roiOut = getROI(self)
@@ -35,9 +43,11 @@ classdef basicFittingClass < handle
         function setRoi(self,roiIn)
             self.roiPoints = roiIn;
         end
+        %set rotation angle
         function setRotationAngle(self,rotationAngle)
             self.rotationAngle = rotationAngle; 
         end
+        %get rotation angle
         function rotAngleOut = getRotationAngle(self)
             rotAngleOut = self.rotationAngle;
         end
