@@ -1,4 +1,13 @@
 function writeToSetlist(command,setListIP,setListPort)
+    %set default arguments if some are missing
+    switch nargin
+        case 1
+            setListIP = 'localhost';
+            setListPort = getSetListPort(setListIP);
+        case 2
+            setListPort = getSetListPort(setListIP);
+    end
+
     %first let's put the string command in the correct format
     byteCommand = unicode2native(command);
     %Need to do some janky decimal to binary and back to decimal conversion
@@ -13,6 +22,15 @@ function writeToSetlist(command,setListIP,setListPort)
     %let's open up the TCP connection and write in the data
     setlist = tcpclient(setListIP,setListPort);
     write(setlist,totCommandToSetlist);
+    pause(0.2);
     setlistResponse = read(setlist);
     disp(native2unicode(setlistResponse));
+end
+
+%function to grab setlist port from labview
+function port = getSetListPort(setListIP)
+    labviewURL = strcat('http://',setListIP,':3580/SetList/JSON');
+    portString = webread('http://localhost:3580/SetList/JSON');
+    portSplit = strsplit(portString,'=');
+    port = str2double(portSplit(2));
 end
