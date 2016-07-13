@@ -1,26 +1,4 @@
 function varargout = cutter(varargin)
-% CUTTER MATLAB code for cutter.fig
-%      CUTTER, by itself, creates a new CUTTER or raises the existing
-%      singleton*.
-%
-%      H = CUTTER returns the handle to a new CUTTER or the handle to
-%      the existing singleton*.
-%
-%      CUTTER('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in CUTTER.M with the given input arguments.
-%
-%      CUTTER('Property','Value',...) creates a new CUTTER or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before cutter_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to cutter_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
-
-% Edit the above text to modify the response to help cutter
 
 % Last Modified by GUIDE v2.5 28-Jun-2016 18:51:45
 

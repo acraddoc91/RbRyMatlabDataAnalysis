@@ -9,5 +9,14 @@ function mulliganJson = setlistMulligan( mulliganArray )
     else
         mulliganJson = savejson('',struct('mulligan',[mulliganArray]));
     end
+    try
+        cutTable = evalin('base','cutTable');
+    catch
+        cutTable = {};
+    end
+    for i = 1:length(mulliganArray)
+        cutTable = [cutTable;{'Index','~=',num2str(mulliganArray(i))}];
+    end
+    assignin('base','cutTable',cutTable);
 end
 
