@@ -2,7 +2,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 13-Jul-2016 11:01:29
+    % Last Modified by GUIDE v2.5 13-Jul-2016 12:18:05
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -264,3 +264,8 @@ function mulliganButton_Callback(hObject, eventdata, handles)
     %Send mulligan to setlist
     mulliganJSON = setlistMulligan(mulliganIndexAct);
     writeToSetlist(mulliganJSON)
+
+
+%Opens setlist control window
+function setlistControl_Callback(hObject, eventdata, handles)
+    setlistControl;

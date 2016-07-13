@@ -4,10 +4,10 @@ function mulliganJson = setlistMulligan( mulliganArray )
     %converts this to a scalar
     if length(mulliganArray)==1
         mulliganJson = strcat('{"mulligan":[',num2str(mulliganArray),']}');
-    elseif legnth(mulliganArray)==0
+    elseif length(mulliganArray)==0
         mulliganJson = '';
     else
-        mulliganJson = savejson(struct('mulligan',[mulliganArray]));
+        mulliganJson = savejson('',struct('mulligan',[mulliganArray]));
     end
 end
 
