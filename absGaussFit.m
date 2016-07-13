@@ -111,14 +111,14 @@ classdef absGaussFit < basicFittingClass
             else
                 xVec = sum(processedImage(self.centreY-10:self.centreY+10,:),1)/21;
             end
-            spatialVec = self.pixSize * self.magnification * [1:length(xVec)]- self.pixSize * self.magnification * self.centreX;
+            spatialVec = self.pixSize/self.magnification * [1:length(xVec)]- self.pixSize/self.magnification * self.centreX;
             plot(spatialVec,xVec,'.')
             hold all
             plot(spatialVec,self.gauss(self.xCoffs,[1:length(xVec)]))
             hold off
             xlabel('Distance in X direction (\mum)')
             ylabel('OD')
-            legend('x-data',sprintf('\\sigma_x = %.0f\\mum',self.xCoffs(4)*self.pixSize * self.magnification),'Location','southwest');
+            legend('x-data',sprintf('\\sigma_x = %.0f\\mum',self.xCoffs(4)*self.pixSize/self.magnification),'Location','southwest');
             legend('boxoff');
         end
         %Plot the y directional slice of the cloud with its fit
@@ -132,14 +132,14 @@ classdef absGaussFit < basicFittingClass
             else
                 yVec = sum(processedImage(:,self.centreX-10:self.centreX+10),2)/21;
             end
-            spatialVec = self.pixSize * self.magnification * [1:length(yVec)]- self.pixSize * self.magnification * self.centreY;
+            spatialVec = self.pixSize/self.magnification * [1:length(yVec)]- self.pixSize/self.magnification * self.centreY;
             plot(spatialVec,yVec,'.')
             hold all
             plot(spatialVec,self.gauss(self.yCoffs,[1:length(yVec)]))
             hold off
             xlabel('Distance in Y direction (\mum)')
             ylabel('OD')
-            legend('y-data',sprintf('\\sigma_y = %.0f\\mum',self.yCoffs(4)*self.pixSize * self.magnification),'Location','southwest');
+            legend('y-data',sprintf('\\sigma_y = %.0f\\mum',self.yCoffs(4)*self.pixSize/self.magnification),'Location','southwest');
             legend('boxoff');
         end
         %Return centre coordinates
@@ -151,9 +151,12 @@ classdef absGaussFit < basicFittingClass
         %Output fit values (specifically the x & y sigma atm) to a
         %structure
         function fitVars = getFitVars(self)
+            roi = self.getROI;
             %note sigmaX & sigmaY are in micrometres
-            fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize*self.magnification;
-            fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize*self.magnification;
+            fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize/self.magnification;
+            fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize/self.magnification;
+            fitVars.('calcCentreX_pix') = self.xCoffs(3)+roi(1);
+            fitVars.('calcCentreY_pix') = self.yCoffs(3)+roi(2);
             fitVars.('N_atoms') = self.getAtomNumber;
             fitVars.('rotAngle') = self.getRotationAngle;
         end
@@ -166,14 +169,14 @@ classdef absGaussFit < basicFittingClass
             %values for 87Rb D2 line
             gam = 38.116 * 10^6;
             %isat = 1.6692*10^(-3); %W/cm^2 for sigma_\pm polarised light
-            isat = 2.5033; %W/cm^2 for pi polarised light
+            isat = 2.5033*10^(-3); %W/cm^2 for pi polarised light
             hbar = 1.0545718*10^(-34);
             omega = 2*pi*384.2281152028*10^12;
             sig0 = hbar*omega*gam/(2*isat);
             sig = sig0/(1+4*(2*pi*imagingDetuning*10^6/gam)^2+(imagingIntensity/(isat))) * 10^-4; %in m^2
             procImage = self.getProcessedImage();
             procImage(procImage>0) = 0; %set any values of procImage which have a negative OD, which comes about because of interference in the image
-            self.atomNumber = -sum(sum(procImage))*(self.magnification*self.pixSize*10^(-6))^2/sig;
+            self.atomNumber = -sum(sum(procImage))*(self.pixSize*10^(-6)/self.magnification)^2/sig;
         end
         function atomNum = getAtomNumber(self)
             atomNum = self.atomNumber;
