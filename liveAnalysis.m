@@ -2,7 +2,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 05-Jul-2016 16:11:27
+    % Last Modified by GUIDE v2.5 13-Jul-2016 12:18:05
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -38,6 +38,7 @@ function liveAnalysis_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.output = hObject;
     % Update handles structure
     guidata(hObject, handles);
+    addpath('SetlistFeedback');
 
 % UIWAIT makes liveAnalysis wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -243,7 +244,7 @@ function mostRecentImage_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of mostRecentImage
 
 
-% --- Executes on button press in imagFromPlot.
+%Allows you to select shot from the plot to display in the image viewer
 function imagFromPlot_Callback(hObject, eventdata, handles)
     %turn off tracking most recent image
     set(handles.mostRecentImage,'Value',0);
@@ -252,3 +253,19 @@ function imagFromPlot_Callback(hObject, eventdata, handles)
     handles.imageIndexAct = selectdata('SelectionMode','Closest');
     guidata(hObject,handles);
     updateImage(hObject,handles);
+
+
+%Allows you to select a shot from the plot to mulligan
+function mulliganButton_Callback(hObject, eventdata, handles)
+    %grab data point to mulligan
+    axes(handles.livePlot);
+    mulliganIndex = selectdata('SelectionMode','Closest');
+    mulliganIndexAct = handles.shotData(mulliganIndex).Index;
+    %Send mulligan to setlist
+    mulliganJSON = setlistMulligan(mulliganIndexAct);
+    writeToSetlist(mulliganJSON)
+
+
+%Opens setlist control window
+function setlistControl_Callback(hObject, eventdata, handles)
+    setlistControl;
