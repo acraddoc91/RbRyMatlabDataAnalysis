@@ -9,6 +9,8 @@ classdef basicFittingClass < handle
         processedImage = 0;
         roiPoints;
         rotationAngle=0;
+        magnification=1.0;
+        pixSize=3.69;
     end
     
     %And some methods which should be general to all fitting classes
@@ -29,7 +31,7 @@ classdef basicFittingClass < handle
             contour(self.processedImage);
         end
         %Get the processed image
-        function procImageOut = getProcessedImage(self)
+        function procImageOut = getCutImage(self)
             %rotate the image by the rotation angle and apply the ROI to
             %give the output
             rotImage = imrotate(self.processedImage,self.rotationAngle);
@@ -50,6 +52,11 @@ classdef basicFittingClass < handle
         %get rotation angle
         function rotAngleOut = getRotationAngle(self)
             rotAngleOut = self.rotationAngle;
+        end
+        %Function to set the magnification of the lens system used to
+        %produce the shot
+        function setMagnification(self,mag)
+            self.magnification = mag;
         end
     end
 end

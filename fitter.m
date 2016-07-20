@@ -197,7 +197,7 @@ function handles = loadFile(hObject,handles)
     %(log(absorption-background)/(probe-background))
     dummyFit = absGaussFit;
     dummyFit.loadFromFile(fullFilename);
-    handles.processedImage = dummyFit.getProcessedImage;
+    handles.processedImage = dummyFit.getCutImage;
     %plot the processed image to the procImage axes
     axes(handles.procImage);
     handles.procImageResize = imshow(handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
