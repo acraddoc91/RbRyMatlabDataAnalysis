@@ -128,6 +128,8 @@ function updateImage(hObject,handles)
     %check shot fit type and get appropriate processed image
     if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
         dummyFit = absGaussFit;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole')
+        dummyFit = absDipole;
     end
     dummyFit.loadFromFile(fullFilename);
     handles.processedImage = dummyFit.getCutImage;
@@ -182,7 +184,7 @@ function popoutButton_Callback(hObject, eventdata, handles)
 %Allows user to load data from file
 function loadFromFile_Callback(hObject, eventdata, handles)
     %Popout listbox to choose fit types
-    fitList = {'absGaussFit'};
+    fitList = {'absGaussFit','absDipole'};
     [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
     %If fit has been chosen reload data file using selected fit type
     if(fitChosen)
