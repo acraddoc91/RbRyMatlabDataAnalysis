@@ -137,6 +137,53 @@ function handles = runFit_Callback(hObject, eventdata, handles)
             markerCentreY = handles.centreY_pix;
             %redraw the marker with new centre point
             handles = repaintMarker(hObject,handles,markerCentreX,markerCentreY);
+            
+            %dipole fit case
+        case 2
+            %create fit function and load the image to it
+            fit = absDipole;
+            fit.setProcessedImage(handles.processedImage);
+            try
+                fit.setMagnification(handles.currShotData.Magnification);
+            catch
+            end
+            fit.setRotationAngle(handles.rotDegreeVal);
+            %determine if we want to manually specify centre coordinates
+            manCords = get(handles.centreSelection,'Value');
+            %Set ROI
+            fit.setRoi(handles.roiRect_pix);
+            %either manually set centre coordinates or find them automagically
+            switch manCords
+                case 1
+                    fit.findCentreCoordinates
+                case 2
+                    fit.setCentreCoordinates(round(handles.centreX_pix),round(handles.centreY_pix));
+            end
+            %grab the centre coordinates and save them to handles
+            dummyCentre = fit.getCentreCoordinates;
+            handles.centreX_pix = dummyCentre.centreX_pix;
+            handles.centreY_pix = dummyCentre.centreY_pix;
+            %Plot the data
+            axes(handles.xFitPlot)
+            fit.plotX
+            axes(handles.yFitPlot)
+            fit.plotY
+            try
+                fit.calculateAtomNumber(handles.currShotData.ImagingDetuning,handles.currShotData.ImagingIntensity);
+            catch
+            end
+            handles.fitVars = fit.getFitVars();
+            %Set Atom number
+            set(handles.atomNum,'String',handles.fitVars.N_atoms);
+            %Set fit type
+            handles.fitTypeString = 'absDipole';
+            %save handles information
+            guidata(hObject,handles);
+            %rescale the centre for the rescaled image
+            markerCentreX = handles.centreX_pix;
+            markerCentreY = handles.centreY_pix;
+            %redraw the marker with new centre point
+            handles = repaintMarker(hObject,handles,markerCentreX,markerCentreY);
     end
     guidata(hObject,handles);
 
@@ -190,23 +237,27 @@ function handles = loadFile(hObject,handles)
     %import shotData to grab filename
     shotData = grabCutData;
     handles.indexNumAct = shotData(handles.indexNum).Index;
-    set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));
+    set(handles.indexDisp,'String',int2str(shotData(handles.indexNum).Index));    
     fullFilename = char(shotData(handles.indexNum).filePath);
     set(handles.filepathDisp,'String',fullFilename);
     %grab pictures from file and get processed image
     %(log(absorption-background)/(probe-background))
     dummyFit = absGaussFit;
     dummyFit.loadFromFile(fullFilename);
-    handles.processedImage = dummyFit.getProcessedImage;
+    handles.processedImage = dummyFit.getCutImage;
+    %Set initial rotation
+    handles.rotDegreeVal = shotData(handles.indexNum).rotAngle;
+    set(handles.rotDegree,'String',strcat(num2str(handles.rotDegreeVal),'°'));
+    set(handles.rotSlider,'Value',handles.rotDegreeVal/180);
     %plot the processed image to the procImage axes
-    axes(handles.procImage);
-    handles.procImageResize = imshow(handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1]);
+    handles = updateProcessedImage(handles);
     %Set initial ROI, note fliplr is required as the imcrop function is weird;
-    handles.roiRect_pix = [1,1,fliplr(size(handles.processedImage))];
     handles.currShotData = shotData(handles.indexNum);
     %determine initial fit type
     if strcmp(handles.currShotData.fitType,'absGaussFit')
         set(handles.fitType,'Value',1);
+    elseif strcmp(handles.currShotData.fitType,'absDipole')
+        set(handles.fitType,'Value',2);
     end
     %save all handles information
     guidata(hObject,handles)
@@ -267,13 +318,16 @@ function GUIUpdate(timerObj,eventdata,hObject)
     handles = guidata(hObject);
     %Check if the rotation angle has been changed and if so update image
     if handles.angleUpdate
-        rotatedImage = imrotate(handles.processedImage,+handles.rotDegreeVal);
-        handles.procImageResize = imshow(rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.procImage);
-        handles.roiRect_pix = [1,1,fliplr(size(rotatedImage))];
-        handles.angleUpdate = false;
+        handles = updateProcessedImage(handles);
     end
     guidata(hObject,handles);
 
+function handles = updateProcessedImage(handles)
+    rotatedImage = imrotate(handles.processedImage,+handles.rotDegreeVal);
+    axes(handles.procImage);
+    handles.procImageResize = imshow(rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),1],'Parent',handles.procImage);
+    handles.roiRect_pix = [1,1,fliplr(size(rotatedImage))];
+    handles.angleUpdate = false;
 
 % --- Executes when user attempts to close figure1.
 function figure1_CloseRequestFcn(hObject, eventdata, handles)

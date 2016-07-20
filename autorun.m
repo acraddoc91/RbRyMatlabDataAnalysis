@@ -74,6 +74,33 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
         end
         fitDone = true;
         shotStructure.fitType = 'absGaussFit';
+    elseif strcmp(fitType,'absDipole')
+        %first let's make a fit object and load the current file to it
+        fit = absDipole;
+        fit.loadFromFile(filename);
+        %automagically find the centre coordinates
+        fit.findCentreCoordinates();
+        try
+            %Set the imaging system magnification
+            fit.setMagnification(shotStructure.Magnification);
+        catch
+            disp('magnification not set in Setlist')
+        end
+        try
+            %Calculate atom number
+            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity);
+        catch
+            disp('imagingDetuning or imagingIntensity not set in Setlist')
+        end
+        %Grab the fit variables (specifically the x & y sigmas) and centre
+        %coordinates and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'absDipole';
     end
     
     %Write variables gathered from fit to file if necessary
