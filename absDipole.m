@@ -9,7 +9,10 @@ classdef absDipole < absorptionImageFitting
     methods
         %Constructor just to set ROI and rotation
         function obj = absDipole()
-            %obj.setRotationAngle(8);
+            %For y-axis imaging
+            obj.setRotationAngle(8);
+            obj.roiPoints = [683,597,426,72];
+            %For z-axis imaging
             %obj.rotationAngle = 0;
             %obj.roiPoints = [983,424,359,176];
         end

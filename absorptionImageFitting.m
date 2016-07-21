@@ -20,8 +20,8 @@ classdef absorptionImageFitting < basicFittingClass
         function calculateAtomNumber(self,imagingDetuning,imagingIntensity)
             %values for 87Rb D2 line
             gam = 38.116 * 10^6;
-            isat = 1.6692*10^(-3); %W/cm^2 for sigma_\pm polarised light
-            %isat = 2.5033*10^(-3); %W/cm^2 for pi polarised light
+            %isat = 1.6692*10^(-3); %W/cm^2 for sigma_\pm polarised light
+            isat = 2.5033*10^(-3); %W/cm^2 for pi polarised light
             hbar = 1.0545718*10^(-34);
             omega = 2*pi*384.2281152028*10^12;
             sig0 = hbar*omega*gam/(2*isat);
