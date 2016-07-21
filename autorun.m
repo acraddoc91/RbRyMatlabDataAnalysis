@@ -78,6 +78,8 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
         %first let's make a fit object and load the current file to it
         fit = absDipole;
         fit.loadFromFile(filename);
+        %temporary fixed ROI till I get the live ROI setter worked out
+        fit.setRoi([983,424,359,176]);
         %automagically find the centre coordinates
         fit.findCentreCoordinates();
         try
