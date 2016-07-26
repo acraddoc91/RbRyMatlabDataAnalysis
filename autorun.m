@@ -20,13 +20,25 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
         shotStructure.(char(splitLine(1))) = str2double(splitLine(2));
         currIndex = currIndex + 1;
      end
+     %Get index number
      dummyFileNumIndex = strfind(splitInformString,'FileNumber');
      fileIndex = find(not(cellfun('isempty', dummyFileNumIndex)));
      fileNumSplit = strsplit(char(splitInformString(fileIndex)),'=');
+     shotStructure.Index = str2double(fileNumSplit(2));
+     %Get magnification
      dummyMagIndex = strfind(splitInformString,'Magnification');
      magIndex = find(not(cellfun('isempty', dummyMagIndex)));
      magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
      shotStructure.Magnification = str2double(magSplit(2));
+     %Get timestamp
+     dummyTimeIndex = strfind(splitInformString,'Timestamp');
+     timeIndex = find(not(cellfun('isempty', dummyTimeIndex)));
+     %Check if there is a timestamp. Added to grandfather in old shot files
+     %which don't have timestamps
+     if isempty(magIndex) ~= 1)
+         timeSplit = strsplit(char(splitInformString(timeIndex(1))),'=');
+         shotStructure.Timestamp = datetime(timeSplit(2),'InputFormat','dd-MM-yyyy HH:mm:ss');
+     end
      if writeExperimentalVarsToFile
          h5create(filename,'/Experimental Variables/Index',1);
          h5write(filename,'/Experimental Variables/Index',str2double(fileNumSplit(2)));
@@ -35,7 +47,6 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
              h5write(filename,'/Experimental Variables/Magnification',shotStructure.Magnification);
          end
      end
-     shotStructure.Index = str2double(fileNumSplit(2));
      shotStructure.filePath = filename;
      
     fitDone = false;    
@@ -124,7 +135,7 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
      if exist('shotIn','var')
          %see if index already exists
          repIndex = find([shotIn.Index]==shotStructure.Index);
-         if length(repIndex)==0
+         if isempty(repIndex)
              shotOut = structAppend(shotIn,shotStructure);
          else
              %remove repeated index
