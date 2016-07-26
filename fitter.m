@@ -325,7 +325,7 @@ function GUIUpdate(timerObj,eventdata,hObject)
 function handles = updateProcessedImage(handles)
     rotatedImage = imrotate(handles.processedImage,+handles.rotDegreeVal);
     axes(handles.procImage);
-    handles.procImageResize = imshow(-rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),max(max(handles.processedImage))],'Parent',handles.procImage);
+    handles.procImageResize = imshow(-rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(-rotatedImage)),max(max(-rotatedImage))],'Parent',handles.procImage);
     handles.roiRect_pix = [1,1,fliplr(size(rotatedImage))];
     handles.angleUpdate = false;
 
