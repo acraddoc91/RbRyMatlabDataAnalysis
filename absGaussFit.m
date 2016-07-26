@@ -9,7 +9,7 @@ classdef absGaussFit < absorptionImageFitting
         xCoffs=[0,1,900,300];
         yCoffs=[0,1,500,300];
         %Define the gaussian fitting function
-        gauss = @(coffs,x) transpose(coffs(1)-coffs(2).*exp(-(x-coffs(3)).^2/(2*coffs(4).^2)));
+        gauss = @(coffs,x) transpose(coffs(1)+coffs(2).*exp(-(x-coffs(3)).^2/(2*coffs(4).^2)));
         %Define lower bounds so we don't end up with negative sigmas and
         %whatnot
         lowerBounds = [-Inf,-Inf,0,0];
@@ -38,12 +38,12 @@ classdef absGaussFit < absorptionImageFitting
             %image down into a a vector
             summedRows = sum(self.getCutImage,1);
             summedCols = sum(self.getCutImage,2);
-            %Determine the minimum of this collapsed vector for both columns and
+            %Determine the maximum of this collapsed vector for both columns and
             %rows to find the approximate middle of the cloud.
-            [~,minCol] = min(summedRows);
-            [~,minRow] = min(summedCols);
-            self.centreX = minCol;
-            self.centreY = minRow;
+            [~,maxCol] = max(summedRows);
+            [~,maxRow] = max(summedCols);
+            self.centreX = maxCol;
+            self.centreY = maxRow;
             self.xCoffs(3) = self.centreX;
             self.yCoffs(3) = self.centreY;
         end
@@ -58,7 +58,7 @@ classdef absGaussFit < absorptionImageFitting
             else
                 xVec = sum(cutImage(self.centreY-10:self.centreY+10,:),1)/21;
             end
-            self.xCoffs(2) = -min(xVec);
+            self.xCoffs(2) = max(xVec);
             xPix = transpose([1:length(xVec)]);
             try
                 self.xCoffs = lsqcurvefit(self.gauss,self.xCoffs,xPix,xVec,self.lowerBounds,[],self.opts);
@@ -77,7 +77,7 @@ classdef absGaussFit < absorptionImageFitting
             else
                 yVec = sum(cutImage(:,self.centreX-10:self.centreX+10),2)/21;
             end
-            self.yCoffs(2) = -min(yVec);
+            self.yCoffs(2) = max(yVec);
             yPix = [1:length(yVec)];
             try
                 self.yCoffs = lsqcurvefit(self.gauss,self.yCoffs,yPix,yVec,self.lowerBounds,[],self.opts);
@@ -108,7 +108,7 @@ classdef absGaussFit < absorptionImageFitting
             hold off
             xlabel('Distance in X direction (\mum)')
             ylabel('OD')
-            legend('x-data',sprintf('\\sigma_x = %.0f\\mum',self.xCoffs(4)*self.pixSize/self.magnification),'Location','southwest');
+            legend('x-data',sprintf('\\sigma_x = %.0f\\mum',self.xCoffs(4)*self.pixSize/self.magnification),'Location','northwest');
             legend('boxoff');
         end
         %Plot the y directional slice of the cloud with its fit
@@ -129,7 +129,7 @@ classdef absGaussFit < absorptionImageFitting
             hold off
             xlabel('Distance in Y direction (\mum)')
             ylabel('OD')
-            legend('y-data',sprintf('\\sigma_y = %.0f\\mum',self.yCoffs(4)*self.pixSize/self.magnification),'Location','southwest');
+            legend('y-data',sprintf('\\sigma_y = %.0f\\mum',self.yCoffs(4)*self.pixSize/self.magnification),'Location','northwest');
             legend('boxoff');
         end
         %Return centre coordinates
