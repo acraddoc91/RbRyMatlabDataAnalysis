@@ -35,12 +35,12 @@ classdef absDipole < absorptionImageFitting
             %image down into a a vector
             summedRows = sum(self.getCutImage,1);
             summedCols = sum(self.getCutImage,2);
-            %Determine the minimum of this collapsed vector for both columns and
+            %Determine the maximum of this collapsed vector for both columns and
             %rows to find the approximate middle of the cloud.
-            [~,minCol] = min(summedRows);
-            [~,minRow] = min(summedCols);
-            self.centreX = minCol;
-            self.centreY = minRow;
+            [~,maxCol] = max(summedRows);
+            [~,maxRow] = max(summedCols);
+            self.centreX = maxCol;
+            self.centreY = maxRow;
         end
         %Plot the x directional slice of the cloud with its fit
         function plotX(self)
