@@ -21,10 +21,19 @@ classdef basicFittingClass < handle
             procImageIn(isinf(procImageIn))=0;
             procImageIn(isnan(procImageIn))=0;
             self.processedImage = procImageIn;
-            %fliplr function needed as imcrop function operates weirdly and
-            %requires the indicies in the order [x,y,width,height] which is
-            %the opposite order to the way the size function operates
-            self.roiPoints = [1,1,fliplr(size(self.processedImage))];
+            %Check if a ROI has been set yet and if not just make a
+            %standard ROI
+            if isempty(self.roiPoints)
+                %fliplr function needed as imcrop function operates weirdly and
+                %requires the indicies in the order [x,y,width,height] which is
+                %the opposite order to the way the size function operates
+                self.roiPoints = [1,1,fliplr(size(imrotate(self.processedImage,self.rotationAngle)))];
+                %If the above is too computationally expensive then you can
+                %set ROI using
+                %imSize = size(self.processedImage);
+                %testRoi =
+                %[1,1,ceil(abs(cos(self.rotationAngle*pi/180))*imSize(2)+abs(sin(self.rotationAngle*pi/180))*imSize(1)),ceil(abs(cos(self.rotationAngle*pi/180))*imSize(1)+abs(sin(self.rotationAngle*pi/180))*imSize(2))];
+            end
         end
         %Do a contour plot of the processed image
         function plotProcessedImage(self)
