@@ -35,7 +35,7 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
      timeIndex = find(not(cellfun('isempty', dummyTimeIndex)));
      %Check if there is a timestamp. Added to grandfather in old shot files
      %which don't have timestamps
-     if isempty(magIndex) ~= 1)
+     if isempty(timeIndex) ~= 1
          timeSplit = strsplit(char(splitInformString(timeIndex(1))),'=');
          shotStructure.Timestamp = datetime(timeSplit(2),'InputFormat','dd-MM-yyyy HH:mm:ss');
      end

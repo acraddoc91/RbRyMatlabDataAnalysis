@@ -133,7 +133,7 @@ function updateImage(hObject,handles)
     end
     dummyFit.loadFromFile(fullFilename);
     handles.processedImage = dummyFit.getCutImage;
-    handles.procImageViewer = imshow(handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),max(max(handles.processedImage))],'Parent',handles.imageViewer);
+    handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(handles.processedImage)),max(max(handles.processedImage))],'Parent',handles.imageViewer);
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
 
