@@ -127,8 +127,9 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
          if length(repIndex)==0
              shotOut = structAppend(shotIn,shotStructure);
          else
-             shotOut = shotIn;
-             shotOut(repIndex) = shotStructure;
+             %remove repeated index
+             shotIn(repIndex) = [];
+             shotOut = structAppend(shotIn,shotStructure);
          end
          assignin('base','shotData',shotOut);
      end
