@@ -2,7 +2,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 13-Jul-2016 12:18:05
+    % Last Modified by GUIDE v2.5 05-Aug-2016 14:04:54
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -106,7 +106,7 @@ function GUIUpdate(timerObj,eventdata,hObject)
             newMaxIndexAct = length([shotIn.Index]);
             if newMaxIndexAct > handles.imageIndexAct
                 handles.imageIndexAct = newMaxIndexAct;
-                updateImage(hObject,handles)
+                handles=updateImage(hObject,handles);
             end
         end
     end
@@ -122,7 +122,7 @@ function GUIUpdate(timerObj,eventdata,hObject)
     guidata(hObject,handles)
 
 %function to update the displayed shot image
-function updateImage(hObject,handles)
+function handles=updateImage(hObject,handles)
     %grab shot filename from index
     fullFilename = char(handles.shotData(handles.imageIndexAct).filePath);
     %check shot fit type and get appropriate processed image
@@ -271,3 +271,12 @@ function mulliganButton_Callback(hObject, eventdata, handles)
 %Opens setlist control window
 function setlistControl_Callback(hObject, eventdata, handles)
     setlistControl;
+
+
+%Prints current image to the base workspace
+function printImageToWorkspace_Callback(hObject, eventdata, handles)
+    try
+        assignin('base','imageFromLiveAnalysis',handles.processedImage);
+    catch
+        msgbox('No image to send to workspace');
+    end
