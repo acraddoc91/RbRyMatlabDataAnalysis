@@ -2,7 +2,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 05-Aug-2016 14:04:54
+    % Last Modified by GUIDE v2.5 08-Aug-2016 17:50:03
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -32,6 +32,7 @@ function liveAnalysis_OpeningFcn(hObject, eventdata, handles, varargin)
     handles.xField = '';
     handles.yField = '';
     handles.imageIndexAct = 0;
+    handles.requireUpdate = true;
     guidata(hObject, handles);
     handles.timer = timer('ExecutionMode','fixedRate','Period', 0.3,'TimerFcn', {@GUIUpdate,hObject});
     start(handles.timer);
@@ -39,6 +40,7 @@ function liveAnalysis_OpeningFcn(hObject, eventdata, handles, varargin)
     % Update handles structure
     guidata(hObject, handles);
     addpath('SetlistFeedback');
+    assignin('base','liveAnalysisObject',hObject);
 
 % UIWAIT makes liveAnalysis wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -51,6 +53,8 @@ varargout{1} = handles.output;
 
 % --- Executes on selection change in xVar.
 function xVar_Callback(hObject, eventdata, handles)
+    handles = updatePlot(handles);
+    guidata(hObject,handles);
 
 % --- Executes during object creation, after setting all properties.
 function xVar_CreateFcn(hObject, eventdata, handles)
@@ -61,7 +65,9 @@ function xVar_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on selection change in yVar.
 function yVar_Callback(hObject, eventdata, handles)
-
+    handles = updatePlot(handles);
+    guidata(hObject,handles);
+    
 % --- Executes during object creation, after setting all properties.
 function yVar_CreateFcn(hObject, eventdata, handles)
     if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
@@ -71,44 +77,50 @@ function yVar_CreateFcn(hObject, eventdata, handles)
 %Executes when needed to update GUI    
 function GUIUpdate(timerObj,eventdata,hObject)
     handles = guidata(hObject);
+    %Make sure liveAnalysisObject hasn't been deleted
     try
-        %Grab the data from the base workspace and update the live plot
-        %based on the fields selected
-        shotIn = grabCutData;
-        %Update image index list. Check to make sure the current index is
-        %not out of bounds for the new string
-        if handles.imageIndexAct <= length(shotIn)
-            set(handles.imageIndexList,'String',[shotIn.Index]);
-        else
-            handles.imageIndexAct = length(shotIn);
-            set(handles.imageIndexList,'Value',handles.imageIndexAct);
-            set(handles.imageIndexList,'String',[shotIn.Index]);
-            updateImage(hObject,handles);
-        end
-        if isequal(shotIn,handles.shotData) ~= 1
-            if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
-                handles.variables = fieldnames(shotIn);
-                set(handles.yVar,'String',handles.variables);
-                set(handles.xVar,'String',handles.variables);
-            end
-            handles.shotData = shotIn;  
-        end
-        handles.xField = char(handles.variables(get(handles.xVar,'Value')));
-        handles.yField = char(handles.variables(get(handles.yVar,'Value')));
-        handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
-        xlabel(handles.livePlot,handles.xField,'Interpreter','none');
-        ylabel(handles.livePlot,handles.yField,'Interpreter','none');
+        h=evalin('base','liveAnalysisObject');
+    catch
+        assignin('base','liveAnalysisObject',hObject);
     end
-    try
-        if get(handles.mostRecentImage,'Value')
-            %check to see if there are any new shots in shotData and update
-            %displayed image if necessary
-            newMaxIndexAct = length([shotIn.Index]);
-            if newMaxIndexAct > handles.imageIndexAct
-                handles.imageIndexAct = newMaxIndexAct;
-                handles=updateImage(hObject,handles);
+    %See if shotData or the cut table has changed
+    if handles.requireUpdate
+        try
+            %Grab the data from the base workspace and update the live plot
+            %based on the fields selected
+            shotIn = grabCutData;
+            %Update image index list. Check to make sure the current index is
+            %not out of bounds for the new string
+            if handles.imageIndexAct <= length(shotIn)
+                set(handles.imageIndexList,'String',[shotIn.Index]);
+            else
+                handles.imageIndexAct = length(shotIn);
+                set(handles.imageIndexList,'Value',handles.imageIndexAct);
+                set(handles.imageIndexList,'String',[shotIn.Index]);
+                updateImage(hObject,handles);
+            end
+            if isequal(shotIn,handles.shotData) ~= 1
+                if isequal(fieldnames(shotIn),fieldnames(handles.shotData)) ~= 1
+                    handles.variables = fieldnames(shotIn);
+                    set(handles.yVar,'String',handles.variables);
+                    set(handles.xVar,'String',handles.variables);
+                end
+                handles.shotData = shotIn;  
+            end
+            handles = updatePlot(handles);
+        end
+        try
+            if get(handles.mostRecentImage,'Value')
+                %check to see if there are any new shots in shotData and update
+                %displayed image if necessary
+                newMaxIndexAct = length([shotIn.Index]);
+                if newMaxIndexAct > handles.imageIndexAct
+                    handles.imageIndexAct = newMaxIndexAct;
+                    handles=updateImage(hObject,handles);
+                end
             end
         end
+        handles.requireUpdate = false;
     end
     %check if figure closed and if so delete handles.popfig & popfigAxes and set popout
     %button text back
@@ -266,6 +278,7 @@ function mulliganButton_Callback(hObject, eventdata, handles)
     %Send mulligan to setlist
     mulliganJSON = setlistMulligan(mulliganIndexAct);
     writeToSetlist(mulliganJSON)
+    updateLiveAnalysis();
 
 
 %Opens setlist control window
@@ -280,3 +293,10 @@ function printImageToWorkspace_Callback(hObject, eventdata, handles)
     catch
         msgbox('No image to send to workspace');
     end
+    
+function handles = updatePlot(handles)
+    handles.xField = char(handles.variables(get(handles.xVar,'Value')));
+    handles.yField = char(handles.variables(get(handles.yVar,'Value')));
+    handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+    xlabel(handles.livePlot,handles.xField,'Interpreter','none');
+    ylabel(handles.livePlot,handles.yField,'Interpreter','none');

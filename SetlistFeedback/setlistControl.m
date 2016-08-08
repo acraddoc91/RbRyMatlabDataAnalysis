@@ -98,6 +98,7 @@ function mulliganButton_Callback(hObject, eventdata, handles)
         mulliganArray = setlistMulligan(round(mulliganIndex));
     end
     writeToSetlist(mulliganArray)
+    updateLiveAnalysis;
 
 
 function mulliganIndex_Callback(hObject, eventdata, handles)

@@ -23,5 +23,6 @@ function analysisdone = autorun(filename,fitType,writeCalcVarsToFile,writeExperi
         assignin('base','shotData',shotOut);
     end
     analysisdone=1;
+    updateLiveAnalysis();
 end
 

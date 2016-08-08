@@ -231,6 +231,8 @@ function saveVals_Callback(hObject, eventdata, handles)
     shotData(outGoingIndexNum).fitType = handles.fitTypeString;
     %Write new shotData to workspace
     assignin('base','shotData',shotData);
+    %update liveAnalysis
+    updateLiveAnalysis();
     
 %function to load shot for refitting    
 function handles = loadFile(hObject,handles)

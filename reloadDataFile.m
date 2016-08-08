@@ -36,6 +36,7 @@ if(fileSelected>0)
             assignin('base','shotData',reloadStruct);
         end
     end
+    updateLiveAnalysis()
 end
 
 end
