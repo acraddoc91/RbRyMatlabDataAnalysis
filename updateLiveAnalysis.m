@@ -1,5 +1,6 @@
 function updateLiveAnalysis()
-    %update liveAnalysis
+    %Function which will set the requireUpdate variable of liveAnalysis to
+    %true causing liveAnalysis to update its internal shotData.
     try
         liveAnalysisObject=evalin('base','liveAnalysisObject');
     end
