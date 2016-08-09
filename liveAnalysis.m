@@ -145,7 +145,13 @@ function handles=updateImage(hObject,handles)
     end
     dummyFit.loadFromFile(fullFilename);
     handles.processedImage = dummyFit.getCutImage;
-    handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
+    %handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
+    axes(handles.imageViewer);
+    handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
+    set(handles.imageViewer,'xtick',[]);
+    set(handles.imageViewer,'ytick',[]);
+    colorbar;
+    axis image;
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
 
