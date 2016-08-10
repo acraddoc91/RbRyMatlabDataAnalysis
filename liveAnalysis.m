@@ -2,7 +2,7 @@ function varargout = liveAnalysis(varargin)
 
     % Edit the above text to modify the response to help liveAnalysis
 
-    % Last Modified by GUIDE v2.5 08-Aug-2016 17:50:03
+    % Last Modified by GUIDE v2.5 10-Aug-2016 11:53:47
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -145,13 +145,21 @@ function handles=updateImage(hObject,handles)
     end
     dummyFit.loadFromFile(fullFilename);
     handles.processedImage = dummyFit.getCutImage;
-    %handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
     axes(handles.imageViewer);
-    handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
-    set(handles.imageViewer,'xtick',[]);
-    set(handles.imageViewer,'ytick',[]);
-    colorbar;
-    axis image;
+    %See if we want to colourise our image
+    if get(handles.colourise,'Value')==1
+        %If so plot using default colour palette
+        handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
+        set(handles.imageViewer,'xtick',[]);
+        set(handles.imageViewer,'ytick',[]);
+        colorbar(handles.imageViewer);
+        colormap(handles.imageViewer,'jet');
+        axis(handles.imageViewer,'image');
+    else
+        %Otherwise plot using greyscale paletter
+        handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
+        colormap(handles.imageViewer,'gray');
+    end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
 
@@ -222,7 +230,7 @@ function fitButton_Callback(hObject, eventdata, handles)
     cftool([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)]);
 
 
-% --- Executes on button press in saveSessButton.
+%Saves cutTable and shotData to file for later recollection
 function saveSessButton_Callback(hObject, eventdata, handles)
     [filename,pathname] = uiputfile;
     totfilename = strcat(pathname,filename);
@@ -300,9 +308,20 @@ function printImageToWorkspace_Callback(hObject, eventdata, handles)
         msgbox('No image to send to workspace');
     end
     
+%Updates the plot in liveAnalysis    
 function handles = updatePlot(handles)
+    %Grab the x and y field names
     handles.xField = char(handles.variables(get(handles.xVar,'Value')));
     handles.yField = char(handles.variables(get(handles.yVar,'Value')));
+    %Plot the data with the given x and y fields
     handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+    %Label the graph using the x and y field names
     xlabel(handles.livePlot,handles.xField,'Interpreter','none');
     ylabel(handles.livePlot,handles.yField,'Interpreter','none');
+
+
+%Runs when colourise image checkbox is changed
+function colourise_Callback(hObject, eventdata, handles)
+    %Update image to reflect new colour palette choice
+    handles = updateImage(hObject,handles);
+    guidata(hObject,handles);
