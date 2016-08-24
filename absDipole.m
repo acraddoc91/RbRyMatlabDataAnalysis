@@ -10,11 +10,16 @@ classdef absDipole < absorptionImageFitting
         %Constructor just to set ROI and rotation
         function obj = absDipole()
             %For y-axis imaging
-            obj.setRotationAngle(8);
-            obj.roiPoints = [683,597,426,72];
+            %obj.setRotationAngle(8);
+            %obj.roiPoints = [150,800,650,350];
             %For z-axis imaging
             %obj.rotationAngle = 0;
+            %Old ROI for z-axis imaging
             %obj.roiPoints = [983,424,359,176];
+            %New ROI for z-axis imaging
+            %obj.roiPoints = [400,600,600,300];
+            %obj.roiPoints=[635, 670, 80, 50]
+            obj.roiPoints = [700,720,50,50];
         end
         %Manually set the coordinates to the cloud centre
         function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)
