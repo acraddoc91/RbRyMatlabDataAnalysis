@@ -1,6 +1,6 @@
 function varargout = fitter(varargin)
 
-    % Last Modified by GUIDE v2.5 11-Jul-2016 12:56:12
+    % Last Modified by GUIDE v2.5 10-Aug-2016 12:06:07
 
     % Begin initialization code - DO NOT EDIT
     gui_Singleton = 1;
@@ -231,6 +231,8 @@ function saveVals_Callback(hObject, eventdata, handles)
     shotData(outGoingIndexNum).fitType = handles.fitTypeString;
     %Write new shotData to workspace
     assignin('base','shotData',shotData);
+    %update liveAnalysis
+    updateLiveAnalysis();
     
 %function to load shot for refitting    
 function handles = loadFile(hObject,handles)
@@ -322,10 +324,24 @@ function GUIUpdate(timerObj,eventdata,hObject)
     end
     guidata(hObject,handles);
 
+%Redraw the shot image
 function handles = updateProcessedImage(handles)
     rotatedImage = imrotate(handles.processedImage,+handles.rotDegreeVal);
     axes(handles.procImage);
-    handles.procImageResize = imshow(-rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(-rotatedImage)),max(max(-rotatedImage))],'Parent',handles.procImage);
+    %See if we need to colourise the image
+    if get(handles.colourise,'Value')==1
+        %If so colourise using the default palette
+        handles.procImageViewer = imagesc(rotatedImage,'Parent',handles.procImage, [0,max(max(handles.processedImage))]);
+        set(handles.procImage,'xtick',[]);
+        set(handles.procImage,'ytick',[]);
+        colorbar(handles.procImage);
+        colormap(handles.procImage,'jet');
+        axis(handles.procImage,'image');
+    else
+        %Otherwise use greyscale palette
+        handles.procImageResize = imshow(-rotatedImage,'InitialMagnification','fit','DisplayRange',[min(min(-rotatedImage)),max(max(-rotatedImage))],'Parent',handles.procImage);
+        colormap(handles.procImage,'gray');
+    end
     handles.roiRect_pix = [1,1,fliplr(size(rotatedImage))];
     handles.angleUpdate = false;
 
@@ -337,3 +353,12 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
     % Destroy timer
     delete(handles.timer)
     delete(hObject);
+
+
+%Runs when colourise image checkbox is changed
+function colourise_Callback(hObject, eventdata, handles)
+    %Update image to reflect new colour palette choice
+    handles = updateProcessedImage(handles);
+    handles = repaintMarker(hObject,handles,handles.centreX_pix,handles.centreY_pix);
+    repaintROIRectangle(hObject,handles,handles.roiRect_pix);
+    guidata(hObject,handles);

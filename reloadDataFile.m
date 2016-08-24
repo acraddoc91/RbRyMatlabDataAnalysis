@@ -11,11 +11,32 @@ if(fileSelected>0)
         autorun(totFilename,fitType,false,false);
     else
         %if multiple files selected loop over each file to import them
-        for i = 1:length(filename)
+        parfor i = 1:length(filename)
             totFilename = strcat(pathname,char(filename(i)));
-            autorun(totFilename,fitType,false,false);
+            reloadStruct(i) = shotProcessor(totFilename,fitType,false,false);
+        end
+        try
+            shotIn = evalin('base','shotData');
+        catch
+        end
+        if exist('shotIn','var')
+            for i = 1:length(reloadStruct)
+                %see if index already exists
+                repIndex = find([shotIn.Index]==reloadStruct(i).Index);
+                if isempty(repIndex)
+                    shotIn = structAppend(shotIn,reloadStruct(i));
+                else
+                    %remove repeated index
+                    shotIn(repIndex) = [];
+                    shotIn = structAppend(shotIn,reloadStruct(i));
+                end
+            end
+            assignin('base','shotData',shotIn);
+        else
+            assignin('base','shotData',reloadStruct);
         end
     end
+    updateLiveAnalysis()
 end
 
 end

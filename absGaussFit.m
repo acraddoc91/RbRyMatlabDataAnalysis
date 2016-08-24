@@ -17,6 +17,10 @@ classdef absGaussFit < absorptionImageFitting
     end
     
     methods
+        %Constructor just to set ROI and rotation
+        function obj = absDipole()
+            obj.roiPoints = [400,600,450,180];
+        end
         %Manually set the coordinates to the cloud centre
         function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)
             %Check centre is within ROI

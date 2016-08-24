@@ -91,6 +91,7 @@ function doCuts_Callback(hObject, eventdata, handles)
     end
     %replace base workspace cutTable
     assignin('base','cutTable',cutTableOut);
+    updateLiveAnalysis();
 
 
 % --- Executes on button press in clearCuts.
