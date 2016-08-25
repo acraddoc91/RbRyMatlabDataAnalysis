@@ -144,21 +144,23 @@ function handles=updateImage(hObject,handles)
         dummyFit = absDipole;
     end
     dummyFit.loadFromFile(fullFilename);
-    handles.processedImage = dummyFit.getCutImage;
-    axes(handles.imageViewer);
-    %See if we want to colourise our image
-    if get(handles.colourise,'Value')==1
-        %If so plot using default colour palette
-        handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
-        set(handles.imageViewer,'xtick',[]);
-        set(handles.imageViewer,'ytick',[]);
-        colorbar(handles.imageViewer);
-        colormap(handles.imageViewer,'jet');
-        axis(handles.imageViewer,'image');
-    else
-        %Otherwise plot using greyscale paletter
-        handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
-        colormap(handles.imageViewer,'gray');
+    if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
+        handles.processedImage = dummyFit.getCutImage;
+        axes(handles.imageViewer);
+        %See if we want to colourise our image
+        if get(handles.colourise,'Value')==1
+            %If so plot using default colour palette
+            handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
+            set(handles.imageViewer,'xtick',[]);
+            set(handles.imageViewer,'ytick',[]);
+            colorbar(handles.imageViewer);
+            colormap(handles.imageViewer,'jet');
+            axis(handles.imageViewer,'image');
+        else
+            %Otherwise plot using greyscale paletter
+            handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
+            colormap(handles.imageViewer,'gray');
+        end
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
@@ -182,7 +184,9 @@ function refitButton_Callback(hObject, eventdata, handles)
     %Get number of point to refit and open up the refit gui to do fit
     axes(handles.livePlot);
     refitIndexNum = selectdata('SelectionMode','Closest');
-    fitter(refitIndexNum);
+    if strcmp(handles.shotData(refitIndexNum).fitType,'absGaussFit')|strcmp(handles.shotData(refitIndexNum).fitType,'absDipole')
+        fitter(refitIndexNum);
+    end
 
 
 %Makes a popout figure from the plot currently being viewed for
@@ -210,7 +214,7 @@ function popoutButton_Callback(hObject, eventdata, handles)
 %Allows user to load data from file
 function loadFromFile_Callback(hObject, eventdata, handles)
     %Popout listbox to choose fit types
-    fitList = {'absGaussFit','absDipole'};
+    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement'};
     [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
     %If fit has been chosen reload data file using selected fit type
     if(fitChosen)

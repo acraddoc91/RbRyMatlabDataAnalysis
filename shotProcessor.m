@@ -24,10 +24,12 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
      fileNumSplit = strsplit(char(splitInformString(fileIndex)),'=');
      shotStructure.Index = str2double(fileNumSplit(2));
      %Get magnification
-     dummyMagIndex = strfind(splitInformString,'Magnification');
-     magIndex = find(not(cellfun('isempty', dummyMagIndex)));
-     magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
-     shotStructure.Magnification = str2double(magSplit(2));
+     try
+         dummyMagIndex = strfind(splitInformString,'Magnification');
+         magIndex = find(not(cellfun('isempty', dummyMagIndex)));
+         magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
+         shotStructure.Magnification = str2double(magSplit(2));
+     end
      %Get timestamp
      dummyTimeIndex = strfind(splitInformString,'Timestamp');
      timeIndex = find(not(cellfun('isempty', dummyTimeIndex)));
@@ -110,6 +112,18 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         end
         fitDone = true;
         shotStructure.fitType = 'absDipole';
+    elseif strcmp(fitType,'timeTaggerODMeasurement')
+        fit = timeTaggerODMeasurement;
+        fit.loadFromFile(filename);
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerODMeasurement';
     end
     
     %Write variables gathered from fit to file if necessary
