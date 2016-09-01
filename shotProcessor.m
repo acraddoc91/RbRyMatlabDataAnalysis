@@ -115,6 +115,9 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
     elseif strcmp(fitType,'timeTaggerODMeasurement')
         fit = timeTaggerODMeasurement;
         fit.loadFromFile(filename);
+        if any(strcmp('probeDetuning',fieldnames(shotStructure)))
+            fit.probeDetuning = shotStructure.probeDetuning;
+        end
         fit.runFit();
         %Grab the fit variables and start populating the shotStructure
         fitStruct = fit.getFitVars();
