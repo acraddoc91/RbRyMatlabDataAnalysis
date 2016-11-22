@@ -184,6 +184,47 @@ function handles = runFit_Callback(hObject, eventdata, handles)
             markerCentreY = handles.centreY_pix;
             %redraw the marker with new centre point
             handles = repaintMarker(hObject,handles,markerCentreX,markerCentreY);
+            
+        case 3
+            %create fit function and load the image to it
+            fit = absDoubleGaussFit;
+            fit.setProcessedImage(handles.processedImage);
+            try
+                fit.setMagnification(handles.currShotData.Magnification);
+            catch
+            end
+            %determine if we want to manually specify centre coordinates
+            manCords = get(handles.centreSelection,'Value');
+            %either manually set centre coordinates or find them automagically
+            switch manCords
+                case 1
+                    fit.findCentreCoordinates
+                case 2
+                    fit.setCentreCoordinates(round(handles.centreX_pix),round(handles.centreY_pix));
+            end
+            %grab the centre coordinates and save them to handles
+            dummyCentre = fit.getCentreCoordinates;
+            handles.centreX_pix = dummyCentre.centreX_pix;
+            handles.centreY_pix = dummyCentre.centreY_pix;
+            %Plot the data
+            axes(handles.yFitPlot)
+            fit.plotY
+            try
+                fit.calculateAtomNumber(handles.currShotData.ImagingDetuning,handles.currShotData.ImagingIntensity);
+            catch
+            end
+            handles.fitVars = fit.getFitVars();
+            %Set Atom number
+            set(handles.atomNum,'String',handles.fitVars.N_atoms);
+            %Set fit type
+            handles.fitTypeString = 'absDipole';
+            %save handles information
+            guidata(hObject,handles);
+            %rescale the centre for the rescaled image
+            markerCentreX = handles.centreX_pix;
+            markerCentreY = handles.centreY_pix;
+            %redraw the marker with new centre point
+            handles = repaintMarker(hObject,handles,markerCentreX,markerCentreY);
     end
     guidata(hObject,handles);
 

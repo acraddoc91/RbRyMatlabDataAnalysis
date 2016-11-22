@@ -1,15 +1,14 @@
-classdef absGaussFit < absorptionImageFitting
+classdef absDoubleGaussFit < absorptionImageFitting
     %Class for an absorption imaging gaussian cloud fit
     
     properties
         %Perhaps should find some other way to set pixel size that is more
         %appropriate
-        centreX=0;
-        centreY=0;
-        xCoffs=[0,1,900,300];
-        yCoffs=[0,1,500,300];
+        centreX=150;
+        centreY=50;
+        yCoffs=[0,0.5,50,5,0.1,50,1];
         %Define the gaussian fitting function
-        gauss = @(coffs,x) transpose(coffs(1)+coffs(2).*exp(-(x-coffs(3)).^2/(2*coffs(4).^2)));
+        gauss = @(coffs,x) transpose(coffs(1)+coffs(2).*exp(-(x-coffs(3)).^2/(2*coffs(4).^2))-coffs(5).*exp(-(x-coffs(6)).^2/(2*coffs(7).^2)));
         %Define lower bounds so we don't end up with negative sigmas and
         %whatnot
         lowerBounds = [-Inf,-Inf,0,0];
@@ -18,7 +17,19 @@ classdef absGaussFit < absorptionImageFitting
     
     methods
         %Constructor just to set ROI and rotation
-        function obj = absGaussFit()
+        %Constructor just to set ROI and rotation
+        function obj = absDoubleGaussFit()
+            %For y-axis imaging
+            %obj.setRotationAngle(8);
+            %obj.roiPoints = [300,870,400,80];
+            %For z-axis imaging
+            %obj.rotationAngle = 0;
+            %Old ROI for z-axis imaging
+            %obj.roiPoints = [983,424,359,176];
+            %New ROI for z-axis imaging
+            %obj.roiPoints = [400,600,600,300];
+            %obj.roiPoints=[635, 670, 80, 50]
+            obj.roiPoints = [625,630,250,80];
         end
         %Manually set the coordinates to the cloud centre
         function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)
@@ -45,29 +56,9 @@ classdef absGaussFit < absorptionImageFitting
             %rows to find the approximate middle of the cloud.
             [~,maxCol] = max(summedRows);
             [~,maxRow] = max(summedCols);
-            self.centreX = maxCol;
-            self.centreY = maxRow;
-            self.xCoffs(3) = self.centreX;
-            self.yCoffs(3) = self.centreY;
-        end
-        %Fit the cloud in the X direction
-        function runXFit(self)
-            cutImage = self.getCutImage;
-            [ysiz,~]=size(cutImage);
-            if(self.centreY-10 < 1)
-                xVec = sum(cutImage(1:self.centreY+10,:),1)/(self.centreY+10);
-            elseif(self.centreY+10 > ysiz)
-                xVec = sum(cutImage(self.centreY-10:ysiz,:),1)/(ysiz-self.centreY+10);
-            else
-                xVec = sum(cutImage(self.centreY-10:self.centreY+10,:),1)/21;
-            end
-            self.xCoffs(2) = max(xVec);
-            xPix = transpose([1:length(xVec)]);
-            try
-                self.xCoffs = lsqcurvefit(self.gauss,self.xCoffs,xPix,xVec,self.lowerBounds,[],self.opts);
-            catch ME
-                self.xCoffs = [NaN,NaN,NaN,NaN];
-            end
+            %self.centreX = maxCol;
+            %self.centreY = maxRow;
+            %self.yCoffs(3) = self.centreY;
         end
         %Fit the cloud in the Y direction
         function runYFit(self)
@@ -90,7 +81,6 @@ classdef absGaussFit < absorptionImageFitting
         end
         %Run both fits, included for brevity in other locations
         function runFits(self)
-            self.runXFit();
             self.runYFit();
         end
         %Plot the x directional slice of the cloud with its fit
@@ -144,12 +134,11 @@ classdef absGaussFit < absorptionImageFitting
         %structure
         function fitVars = getFitVars(self)
             %note sigmaX & sigmaY are in micrometres
-            fitVars.('sigmaX_um') = self.xCoffs(4)*self.pixSize/self.magnification;
             fitVars.('sigmaY_um') = self.yCoffs(4)*self.pixSize/self.magnification;
-            fitVars.('calcCentreX_pix') = self.xCoffs(3)+self.roiPoints(1);
             fitVars.('calcCentreY_pix') = self.yCoffs(3)+self.roiPoints(2);
             fitVars.('N_atoms') = self.atomNumber;
             fitVars.('rotAngle') = self.rotationAngle;
+            fitVars.('sigmaY2_um') = self.yCoffs(7)*self.pixSize/self.magnification;
         end
     end
     

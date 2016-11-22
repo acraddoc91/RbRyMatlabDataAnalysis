@@ -142,9 +142,13 @@ function handles=updateImage(hObject,handles)
         dummyFit = absGaussFit;
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole')
         dummyFit = absDipole;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
+        dummyFit = absDoubleGaussFit;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
+        dummyFit = timeTaggerODMeasurement;
     end
     dummyFit.loadFromFile(fullFilename);
-    if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
+    if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')|strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
         handles.processedImage = dummyFit.getCutImage;
         axes(handles.imageViewer);
         %See if we want to colourise our image
@@ -161,6 +165,11 @@ function handles=updateImage(hObject,handles)
             handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
             colormap(handles.imageViewer,'gray');
         end
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
+        [ODDat,timeDat] = dummy.getODPlotData();
+        handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
+        xlabel(handles.imageViewer,'Time');
+        ylabel(handles.imageViewer,'OD');
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
@@ -184,7 +193,7 @@ function refitButton_Callback(hObject, eventdata, handles)
     %Get number of point to refit and open up the refit gui to do fit
     axes(handles.livePlot);
     refitIndexNum = selectdata('SelectionMode','Closest');
-    if strcmp(handles.shotData(refitIndexNum).fitType,'absGaussFit')|strcmp(handles.shotData(refitIndexNum).fitType,'absDipole')
+    if strcmp(handles.shotData(refitIndexNum).fitType,'absGaussFit')|strcmp(handles.shotData(refitIndexNum).fitType,'absDipole')|strcmp(handles.shotData(refitIndexNum).fitType,'absDoubleGaussFit')
         fitter(refitIndexNum);
     end
 
@@ -214,7 +223,7 @@ function popoutButton_Callback(hObject, eventdata, handles)
 %Allows user to load data from file
 function loadFromFile_Callback(hObject, eventdata, handles)
     %Popout listbox to choose fit types
-    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement'};
+    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement','absDoubleGaussFit'};
     [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
     %If fit has been chosen reload data file using selected fit type
     if(fitChosen)
