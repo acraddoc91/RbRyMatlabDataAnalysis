@@ -166,9 +166,9 @@ function handles=updateImage(hObject,handles)
             colormap(handles.imageViewer,'gray');
         end
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
-        [ODDat,timeDat] = dummy.getODPlotData();
+        [ODDat,timeDat] = dummyFit.getODPlotData();
         handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
-        xlabel(handles.imageViewer,'Time');
+        xlabel(handles.imageViewer,'Time (s)');
         ylabel(handles.imageViewer,'OD');
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);

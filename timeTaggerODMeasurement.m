@@ -64,7 +64,7 @@ classdef timeTaggerODMeasurement < handle
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
-            ODTime = -log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2);
+            ODTime = -real(log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
     end
