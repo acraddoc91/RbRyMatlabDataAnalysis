@@ -11,40 +11,37 @@ classdef timeTaggerODMeasurement < handle
         absorptionTags = [];
         probeTags = [];
         backgroundTags = [];
+        numShots = 1;
     end
     
     methods
         %Grab counts from file
         function loadFromFile(self,filename)
-            dummyAbs = h5read(filename,'/Tags/TagWindow0');
-            dummyProbe = h5read(filename,'/Tags/TagWindow1');
-            dummyBack = h5read(filename,'/Tags/TagWindow2');
+            try
+                self.numShots = h5read(filename,'/Inform/Shots');
+            end
+            for i=1:self.numShots
+                dummy(i*3-2) = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-3));
+                dummy(i*3-1) = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-2));
+                dummy(i*3) = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-1));
+            end
             dummyStart = h5read(filename,'/Tags/StartTag');
-            highCount = 0;
-            %Pull out absorption tags
-            for i=[1:length(dummyAbs)]
-                if bitget(dummyAbs(i),1)==1
-                    highCount = bitshift(dummyAbs(i),-1)-bitshift(dummyStart(1),-1);
-                else
-                    self.absorptionTags = [self.absorptionTags,bitand(bitshift(dummyAbs(i),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2),-1),2^28-1)];
+            for i=1:self.numShots*3
+                highCount = 0;
+                for j=1:legnth(dummy(i))
+                    if bitget(dummy(i,j),1)==1
+                        highCount = bitshift(dummy(i*2-1,j),-1)-bitshift(dummyStart(i*3-2),-1);
+                    else
+                        dummy2 = [dummy2,bitand(bitshift(dummy(i,j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*i),-1),2^28-1)];
+                    end
                 end
-            end
-            highCount = 0;
-            %And probe
-            for i=[1:length(dummyProbe)]
-                if bitget(dummyProbe(i),1)==1
-                    highCount = bitshift(dummyProbe(i),-1)-bitshift(dummyStart(3),-1);
-                else
-                    self.probeTags = [self.probeTags,bitand(bitshift(dummyProbe(i),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(4),-1),2^28-1)];
-                end
-            end
-            highCount = 0;
-            %And background
-            for i=[1:length(dummyBack)]
-                if bitget(dummyBack(i),1)==1
-                    highCount = bitshift(dummyBack(i),-1)-bitshift(dummyStart(5),-1);
-                else
-                    self.backgroundTags = [self.backgroundTags,bitand(bitshift(dummyBack(i),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(6),-1),2^28-1)];
+                switch rem(i,3)
+                    case 1
+                        self.absorbtionTags = [self.absorptionTags,dummy2];
+                    case 2
+                        self.probeTags = [self.probeTags,dummy2];
+                    case 0
+                        self.backgroundTags = [self.backgroundTags,dummy2];
                 end
             end
         end
