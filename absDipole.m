@@ -18,8 +18,11 @@ classdef absDipole < absorptionImageFitting
             %obj.roiPoints = [983,424,359,176];
             %New ROI for z-axis imaging
             %obj.roiPoints = [400,600,600,300];
-            %obj.roiPoints=[635, 670, 80, 50]
-            obj.roiPoints = [450,660,350,80];
+           % obj.roiPoints=[635, 670, 80, 50]
+            obj.roiPoints = [635-197,380-120,376,205];
+            %obj.roiPoints = [635-67,380-30,76,25];
+            %obj.roiPoints = [400,980,400,75]%vertical direction dipole
+            %obj.roiPoints = [320,850,600,480]%vertical direction molasses
         end
         %Manually set the coordinates to the cloud centre
         function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)
@@ -52,11 +55,11 @@ classdef absDipole < absorptionImageFitting
             cutImage = self.getCutImage;
             [ysiz,~]=size(cutImage);
             if(self.centreY-10 < 1)
-                xVec = sum(cutImage(1:self.centreY+10,:),1)/(self.centreY+10);
+                xVec = sum(cutImage(1:self.centreY+2,:),1)/(self.centreY+2);
             elseif(self.centreY+10 > ysiz)
-                xVec = sum(cutImage(self.centreY-10:ysiz,:),1)/(ysiz-self.centreY+10);
+                xVec = sum(cutImage(self.centreY-2:ysiz,:),1)/(ysiz-self.centreY+2);
             else
-                xVec = sum(cutImage(self.centreY-10:self.centreY+10,:),1)/21;
+                xVec = sum(cutImage(self.centreY-2:self.centreY+2,:),1)/5;
             end
             spatialVec = self.pixSize/self.magnification * [1:length(xVec)]- self.pixSize/self.magnification * self.centreX;
             plot(spatialVec,xVec,'.')
@@ -68,11 +71,11 @@ classdef absDipole < absorptionImageFitting
             cutImage = self.getCutImage;
             [~,xsiz]=size(cutImage);
             if(self.centreX-10 < 1)
-                yVec = sum(cutImage(:,1:self.centreX+10),2)/(self.centreX+10);
+                yVec = sum(cutImage(:,1:self.centreX+2),2)/(self.centreX+2);
             elseif(self.centreX+10 > xsiz)
-                yVec = sum(cutImage(:,self.centreX-10:xsiz),2)/(xsiz-self.centreX+10);
+                yVec = sum(cutImage(:,self.centreX-2:xsiz),2)/(xsiz-self.centreX+2);
             else
-                yVec = sum(cutImage(:,self.centreX-10:self.centreX+10),2)/21;
+                yVec = sum(cutImage(:,self.centreX-2:self.centreX+2),2)/5;
             end
             spatialVec = self.pixSize/self.magnification * [1:length(yVec)]- self.pixSize/self.magnification * self.centreY;
             plot(spatialVec,yVec,'.')
