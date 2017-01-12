@@ -15,29 +15,46 @@ classdef timeTaggerODMeasurement < handle
     end
     
     methods
-        %Grab counts from file
+        %Grab tags from file
         function loadFromFile(self,filename)
+            %Try and grab the number of shots (try included for backward
+            %compatibility)
             try
                 self.numShots = h5read(filename,'/Inform/Shots');
             end
+            dummy = {};
+            %Read each tag window vector to the dummy cells
             for i=1:self.numShots
-                dummy(i*3-2) = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-3));
-                dummy(i*3-1) = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-2));
-                dummy(i*3) = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-1));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-3));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-2));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-1));
             end
+            %Also grab the starttime vector
             dummyStart = h5read(filename,'/Tags/StartTag');
+            %Loop over the number of shots (multiplied by three for
+            %absorption)
             for i=1:self.numShots*3
+                %Reset highcount to 0
                 highCount = 0;
-                for j=1:legnth(dummy(i))
-                    if bitget(dummy(i,j),1)==1
-                        highCount = bitshift(dummy(i*2-1,j),-1)-bitshift(dummyStart(i*3-2),-1);
+                %Grab the vector from the dummy cell structure
+                dummy3 = cell2mat(dummy(i));
+                dummy2 = [];
+                %Loop over the number of tags
+                for j=1:length(dummy3)
+                    %If the tag is a highword up the high count
+                    if bitget(dummy3(j),1)==1
+                        highCount = bitshift(dummy3(j),-1)-bitshift(dummyStart(2*i-1),-1);
+                    %Otherwise figure the absolute time since the window
+                    %opened and append it to the dummy vector
                     else
-                        dummy2 = [dummy2,bitand(bitshift(dummy(i,j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*i),-1),2^28-1)];
+                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*i),-1),2^28-1)];
                     end
                 end
+                %Figure out which tag set the dummy tags belong to and send
+                %them to the correct vector
                 switch rem(i,3)
                     case 1
-                        self.absorbtionTags = [self.absorptionTags,dummy2];
+                        self.absorptionTags = [self.absorptionTags,dummy2];
                     case 2
                         self.probeTags = [self.probeTags,dummy2];
                     case 0
@@ -59,12 +76,22 @@ classdef timeTaggerODMeasurement < handle
             fitVars.('probeCount') = self.probeCount;
             fitVars.('backgroundCount') = self.backgroundCount;
         end
+        %This function takes the time tags and bins them into various time
+        %bins it then works out the OD for each time bin and spits that out
+        %as a column vector (ODTime) along with the mid-time of each bin
         function [ODTime,midTime] = getODPlotData(self)
-            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/20:round(double(self.probeTags(end))*82.3e-12,3)];
+            numBins = 20;
+            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
             ODTime = -real(log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
+            midTime = mean([edges(1:end-1);edges(2:end)]);
+        end
+        function [absTimeCounts,midTime] = getAbsPlotData(self)
+             numBins = 20;
+            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
+            absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
     end
