@@ -61,17 +61,12 @@ classdef timeTaggerODMeasurement < handle
                  %Figure out which tag set the dummy tags belong to and send
                  %them to the correct vector
                  if isModulation
-                     if rem(i,2*self.numModulationWindows+1) == 0
-                         self.backgroundTags = [self.backgroundTags,dummy2];
-                     elseif rem(i,2*self.numModulationWindows+1) <= self.numModulationWindows
-                         %Figure out temporal offset relative to start of modulation
-                         shotNum = floor(i/(2*self.numModulationWindows+1));
-                         offset = bitshift(dummyStart(2*i-1)-dummyStart(2*(shotNum*(2*self.numModulationWindows+1)-2*self.numModulationWindows)-1),27)+bitand(bitshift(dummyStart(2*i),-1),2^28-1)-bitand(bitshift(dummyStart(2*(shotNum*(2*self.numModulationWindows+1)-2*self.numModulationWindows)),-1),2^28-1);
-                         self.absorptionTags = [self.absorptionTags,dummy2+offset];
-                     else
-                         shotNum = floor(i/(2*self.numModulationWindows+1));
-                         offset = bitshift(dummyStart(2*i-1)-dummyStart(2*(shotNum*(2*self.numModulationWindows+1)-self.numModulationWindows)-1),27)+bitand(bitshift(dummyStart(2*i),-1),2^28-1)-bitand(bitshift(dummyStart(2*(shotNum*(2*self.numModulationWindows+1)-self.numModulationWindows)),-1),2^28-1);
+                     if rem(i,2*self.numModulationWindows+1) <= self.numModulationWindows
+                         self.absorptionTags = [self.absorptionTags,dummy2];
+                     elseif rem(i,2*self.numModulationWindows+1) <= 2*self.numModulationWindows
                          self.probeTags = [self.absorptionTags,dummy2];
+                     else
+                         self.backgroundTags = [self.backgroundTags,dummy2];
                      end
                  else
                      switch rem(i,3)
