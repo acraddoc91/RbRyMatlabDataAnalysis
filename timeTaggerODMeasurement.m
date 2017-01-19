@@ -21,27 +21,19 @@ classdef timeTaggerODMeasurement < handle
             %compatibility)
             try
                 self.numShots = h5read(filename,'/Inform/Shots');
-                isModulation = h5read(filename,'/Inform/TrapModulation');
-                if isModulation
-                    self.numModulationWindows = h5read(filename,'/Inform/ModulationWindows');
-                end
             end
             dummy = {};
             %Read each tag window vector to the dummy cells
-            if isModulaton
-                for i=1:self.numShots*self.numModulationWindows*2+1
-                    dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i-1));
-                end
-            else
-                for i=1:self.numShots*3
-                    dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i-1));
-                end
+            for i=1:self.numShots
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-3));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-2));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-1));
             end
             %Also grab the starttime vector
             dummyStart = h5read(filename,'/Tags/StartTag');
             %Loop over the number of shots (multiplied by three for
             %absorption)
-            for i=1:length(dummy)
+            for i=1:self.numShots*3
                 %Reset highcount to 0
                 highCount = 0;
                 %Grab the vector from the dummy cell structure
@@ -52,32 +44,22 @@ classdef timeTaggerODMeasurement < handle
                     %If the tag is a highword up the high count
                     if bitget(dummy3(j),1)==1
                         highCount = bitshift(dummy3(j),-1)-bitshift(dummyStart(2*i-1),-1);
-                        %Otherwise figure the absolute time since the window
-                        %opened and append it to the dummy vector
+                    %Otherwise figure the absolute time since the window
+                    %opened and append it to the dummy vector
                     else
                         dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*i),-1),2^28-1)];
                     end
-                 end
-                 %Figure out which tag set the dummy tags belong to and send
-                 %them to the correct vector
-                 if isModulation
-                     if rem(i,2*self.numModulationWindows+1) <= self.numModulationWindows
-                         self.absorptionTags = [self.absorptionTags,dummy2];
-                     elseif rem(i,2*self.numModulationWindows+1) <= 2*self.numModulationWindows
-                         self.probeTags = [self.absorptionTags,dummy2];
-                     else
-                         self.backgroundTags = [self.backgroundTags,dummy2];
-                     end
-                 else
-                     switch rem(i,3)
-                        case 1
-                            self.absorptionTags = [self.absorptionTags,dummy2];
-                        case 2
-                            self.probeTags = [self.probeTags,dummy2];
-                        case 0
-                            self.backgroundTags = [self.backgroundTags,dummy2];
-                     end
-                 end
+                end
+                %Figure out which tag set the dummy tags belong to and send
+                %them to the correct vector
+                switch rem(i,3)
+                    case 1
+                        self.absorptionTags = [self.absorptionTags,dummy2];
+                    case 2
+                        self.probeTags = [self.probeTags,dummy2];
+                    case 0
+                        self.backgroundTags = [self.backgroundTags,dummy2];
+                end
             end
         end
         %Calculate the detuning adjusted OD
