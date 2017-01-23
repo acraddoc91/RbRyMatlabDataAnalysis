@@ -146,6 +146,8 @@ function handles=updateImage(hObject,handles)
         dummyFit = absDoubleGaussFit;
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
         dummyFit = timeTaggerODMeasurement;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
+        dummyFit = timeTaggerEITMeasurement;
     end
     dummyFit.loadFromFile(fullFilename);
     if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')|strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
@@ -169,6 +171,18 @@ function handles=updateImage(hObject,handles)
         [ODDat,timeDat] = dummyFit.getODPlotData();
         handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
         xlabel(handles.imageViewer,'Time (s)');
+        ylabel(handles.imageViewer,'OD');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
+        try
+            fit.setFreqRange(handles.shotData(handles.imageIndexAct).startFreq,handles.shotData(handles.imageIndexAct).endFreq);
+        end
+        dummyFit.runFit();
+        [ODDat,freqDat] = dummyFit.getODPlotData(1000);
+        handles.procImageViewer = plot(handles.imageViewer,freqDat,ODDat);
+        hold all;
+        handles.procImageViewer = plot(handles.imageViewer,freqDat,dummyFit.eit(dummyFit.coffs,freqDat));
+        hold off;
+        xlabel(handles.imageViewer,'Frequency (MHz)');
         ylabel(handles.imageViewer,'OD');
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
@@ -223,7 +237,7 @@ function popoutButton_Callback(hObject, eventdata, handles)
 %Allows user to load data from file
 function loadFromFile_Callback(hObject, eventdata, handles)
     %Popout listbox to choose fit types
-    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement','absDoubleGaussFit'};
+    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement','absDoubleGaussFit','timeTaggerEITMeasurement'};
     [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
     %If fit has been chosen reload data file using selected fit type
     if(fitChosen)

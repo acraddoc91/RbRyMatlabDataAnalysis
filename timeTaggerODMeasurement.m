@@ -80,7 +80,7 @@ classdef timeTaggerODMeasurement < handle
         %bins it then works out the OD for each time bin and spits that out
         %as a column vector (ODTime) along with the mid-time of each bin
         function [ODTime,midTime] = getODPlotData(self)
-            numBins = 20;
+            numBins = 1000;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
@@ -89,7 +89,7 @@ classdef timeTaggerODMeasurement < handle
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
         function [absTimeCounts,midTime] = getAbsPlotData(self)
-             numBins = 20;
+            numBins = 20;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);

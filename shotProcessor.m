@@ -155,8 +155,23 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         end
         fitDone = true;
         shotStructure.fitType = 'absDoubleGaussFit';
+    elseif strcmp(fitType,'timeTaggerEITMeasurement')
+        %Make fit object
+        fit = timeTaggerEITMeasurement;
+        fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.startFreq,shotStructure.endFreq);
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerEITMeasurement';
     end
-    
     %Write variables gathered from fit to file if necessary
     if writeCalcVarsToFile && fitDone
         outVarNames = fieldnames(shotStructure);
