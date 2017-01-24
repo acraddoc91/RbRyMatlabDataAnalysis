@@ -160,7 +160,7 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         fit = timeTaggerEITMeasurement;
         fit.loadFromFile(filename);
         try
-            fit.setFreqRange(shotStructure.startFreq,shotStructure.endFreq);
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
         end
         fit.runFit();
         %Grab the fit variables and start populating the shotStructure

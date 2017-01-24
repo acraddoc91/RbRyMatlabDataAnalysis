@@ -174,7 +174,7 @@ function handles=updateImage(hObject,handles)
         ylabel(handles.imageViewer,'OD');
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
         try
-            fit.setFreqRange(handles.shotData(handles.imageIndexAct).startFreq,handles.shotData(handles.imageIndexAct).endFreq);
+            fit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
         end
         dummyFit.runFit();
         [ODDat,freqDat] = dummyFit.getODPlotData(1000);
