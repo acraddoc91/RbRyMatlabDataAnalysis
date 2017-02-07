@@ -6,6 +6,7 @@ classdef timeTaggerODMeasurement < handle
         probeCount = 0;
         backgroundCount = 0;
         opticalDepth = 0;
+        maxOD = 0;
         probeDetuning = 0; %Probe detuning in MHz
         linewidth = 6.0659 %Rb D2 linewidth in MHz
         absorptionTags = [];
@@ -68,6 +69,9 @@ classdef timeTaggerODMeasurement < handle
             self.probeCount = double(length(self.probeTags));
             self.backgroundCount = double(length(self.backgroundTags));
             self.opticalDepth = -log((self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
+            [ODTime,~] = self.getODPlotData();
+            self.maxOD = max(ODTime);
+           
         end
         %Export fit variables structure
         function fitVars = getFitVars(self)
@@ -75,12 +79,14 @@ classdef timeTaggerODMeasurement < handle
             fitVars.('absorptionCount') = self.absorptionCount;
             fitVars.('probeCount') = self.probeCount;
             fitVars.('backgroundCount') = self.backgroundCount;
+            fitVars.('maxOD') = self.maxOD;
+            
         end
         %This function takes the time tags and bins them into various time
         %bins it then works out the OD for each time bin and spits that out
         %as a column vector (ODTime) along with the mid-time of each bin
         function [ODTime,midTime] = getODPlotData(self)
-            numBins = 1000;
+            numBins = 50;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
