@@ -20,7 +20,7 @@ classdef timeTaggerEITMeasurement < timeTaggerODMeasurement
         function runFit(self)
             %Grab OD histogram data
             [OD,freq] = self.getODPlotData(1000);
-            coffs(5) = (freq(end)-freq(1))/2;
+            self.coffs(5) = (freq(end)-freq(1))/2;
             self.coffs = lsqcurvefit(self.eit,self.coffs,freq,OD,self.lowerBounds,[],self.opts);
         end
         %Allows user to set start and end frequency of the spectrum

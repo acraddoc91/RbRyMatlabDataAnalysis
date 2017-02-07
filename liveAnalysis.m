@@ -148,6 +148,8 @@ function handles=updateImage(hObject,handles)
         dummyFit = timeTaggerODMeasurement;
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
         dummyFit = timeTaggerEITMeasurement;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+        dummyFit = timeTaggerDoubleODMeasurement;
     end
     dummyFit.loadFromFile(fullFilename);
     if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')|strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
@@ -183,6 +185,14 @@ function handles=updateImage(hObject,handles)
         handles.procImageViewer = plot(handles.imageViewer,freqDat,dummyFit.eit(dummyFit.coffs,freqDat));
         hold off;
         xlabel(handles.imageViewer,'Frequency (MHz)');
+        ylabel(handles.imageViewer,'OD');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+        [ODDat,OD2Dat,timeDat] = dummyFit.getODPlotData(100);
+        handles.procImageViewer = plot(handles.imageViewer,timeDat,ODDat);
+        hold all;
+        handles.procImageViewer = plot(handles.imageViewer,timeDat,OD2Dat);
+        hold off;
+        xlabel(handles.imageViewer,'Time(s)');
         ylabel(handles.imageViewer,'OD');
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
