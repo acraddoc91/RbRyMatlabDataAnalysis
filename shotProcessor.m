@@ -174,6 +174,9 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
     elseif strcmp(fitType,'timeTaggerDoubleODMeasurement')
         fit = timeTaggerDoubleODMeasurement;
         fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+        end
         fit.runFit();
         %Grab the fit variables and start populating the shotStructure
         fitStruct = fit.getFitVars();
@@ -183,6 +186,21 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         end
         fitDone = true;
         shotStructure.fitType = 'timeTaggerDoubleODMeasurement';
+    elseif strcmp(fitType,'timeTaggerSpectra')
+        fit = timeTaggerSpectra;
+        fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerSpectra';
     end
     %Write variables gathered from fit to file if necessary
     if writeCalcVarsToFile && fitDone

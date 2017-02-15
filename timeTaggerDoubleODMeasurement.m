@@ -3,9 +3,12 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
     
     properties
         absorption2Tags = [];
+        absorption2Count = 0;
         opticalDepth2 = 0;
         maxOD2 = 0;
         maxODFraction = 0;
+        startFreq = 0;
+        endFreq = -42;
     end
     
     methods
@@ -62,7 +65,7 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
         %This function takes the time tags and bins them into various time
         %bins it then works out the OD for each time bin and spits that out
         %as a column vector (ODTime) along with the mid-time of each bin
-        function [ODTime,OD2Time,midTime] = getODPlotData(self,numBins)
+        function [ODTime,OD2Time,freq] = getODPlotData(self,numBins)
             %numBins = 1000;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
@@ -72,6 +75,8 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
             ODTime = -real(log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
             OD2Time = -real(log((abs2TimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
             midTime = mean([edges(1:end-1);edges(2:end)]);
+            %Convert time to frequency
+            freq = midTime/midTime(end)*(self.endFreq-self.startFreq)+self.startFreq;
         end
          %Calculate the detuning adjusted OD
         function runFit(self)
@@ -79,7 +84,7 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
             self.probeCount = double(length(self.probeTags));
             self.backgroundCount = double(length(self.backgroundTags));
             self.opticalDepth = -log((self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
-            [ODTime,OD2Time,~] = self.getODPlotData(100);
+            [ODTime,OD2Time,~] = self.getODPlotData(20);
             self.maxOD = max(ODTime);
             self.absorption2Count = double(length(self.absorption2Tags));
             self.opticalDepth2 = -log((self.absorption2Count-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
@@ -97,6 +102,11 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
             fitVars.('opticalDepth2') = self.opticalDepth2;
             fitVars.('absorption2Count') = self.absorption2Count;
             fitVars.('maxODFraction') = self.maxODFraction;
+        end
+        %Allows user to set start and end frequency of the spectrum
+        function setFreqRange(self,startF,endF)
+            self.startFreq=startF;
+            self.endFreq=endF;
         end
     end    
 end
