@@ -32,25 +32,29 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
             %Loop over the number of shots (multiplied by three for
             %absorption)
             for i=1:self.numShots*4
+                %Need to recast i as a 16 bit number because Matlab will
+                %cast i as an 8 bit one which causes problems for anything
+                %with more than 21 shots
+                ip = uint16(i);
                 %Reset highcount to 0
                 highCount = 0;
                 %Grab the vector from the dummy cell structure
-                dummy3 = cell2mat(dummy(i));
+                dummy3 = cell2mat(dummy(ip));
                 dummy2 = [];
                 %Loop over the number of tags
                 for j=1:length(dummy3)
                     %If the tag is a highword up the high count
                     if bitget(dummy3(j),1)==1
-                        highCount = bitshift(dummy3(j),-1)-bitshift(dummyStart(2*i-1),-1);
+                        highCount = bitshift(dummy3(j),-1)-bitshift(dummyStart(2*ip-1),-1);
                     %Otherwise figure the absolute time since the window
                     %opened and append it to the dummy vector
                     else
-                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*i),-1),2^28-1)];
+                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^28-1)];
                     end
                 end
                 %Figure out which tag set the dummy tags belong to and send
                 %them to the correct vector
-                switch rem(i,4)
+                switch rem(ip,4)
                     case 1
                         self.absorptionTags = [self.absorptionTags,dummy2];
                     case 2 

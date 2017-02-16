@@ -35,25 +35,29 @@ classdef timeTaggerODMeasurement < handle
             %Loop over the number of shots (multiplied by three for
             %absorption)
             for i=1:self.numShots*3
+                %Need to recast i as a 16 bit number because Matlab will
+                %cast i as an 8 bit one which causes problems for anything
+                %with more than 21 shots
+                ip = uint16(i);
                 %Reset highcount to 0
                 highCount = 0;
                 %Grab the vector from the dummy cell structure
-                dummy3 = cell2mat(dummy(i));
+                dummy3 = cell2mat(dummy(ip));
                 dummy2 = [];
                 %Loop over the number of tags
                 for j=1:length(dummy3)
                     %If the tag is a highword up the high count
                     if bitget(dummy3(j),1)==1
-                        highCount = bitshift(dummy3(j),-1)-bitshift(dummyStart(2*i-1),-1);
+                        highCount = bitshift(dummy3(j),-1)-bitshift(dummyStart(2*ip-1),-1);
                     %Otherwise figure the absolute time since the window
                     %opened and append it to the dummy vector
                     else
-                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*i),-1),2^28-1)];
+                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^28-1)];
                     end
                 end
                 %Figure out which tag set the dummy tags belong to and send
                 %them to the correct vector
-                switch rem(i,3)
+                switch rem(ip,3)
                     case 1
                         self.absorptionTags = [self.absorptionTags,dummy2];
                     case 2
@@ -85,7 +89,7 @@ classdef timeTaggerODMeasurement < handle
         %bins it then works out the OD for each time bin and spits that out
         %as a column vector (ODTime) along with the mid-time of each bin
         function [ODTime,midTime] = getODPlotData(self)
-            numBins = 50;
+            numBins = 100;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
@@ -94,7 +98,7 @@ classdef timeTaggerODMeasurement < handle
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
         function [absTimeCounts,midTime] = getAbsPlotData(self)
-            numBins = 20;
+            numBins = 50;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
