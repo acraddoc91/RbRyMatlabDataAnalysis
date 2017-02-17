@@ -18,10 +18,13 @@ classdef absDipole < absorptionImageFitting
             %obj.roiPoints = [983,424,359,176];
             %New ROI for z-axis imaging
             %obj.roiPoints = [400,600,600,300];
-           % obj.roiPoints=[635, 670, 80, 50]
-            obj.roiPoints = [635-197,380-120,376,205];
-            %obj.roiPoints = [635-67,380-30,76,25];
-            %obj.roiPoints = [400,980,400,75]%vertical direction dipole
+           % obj.roiPoints=[635, 670, 80, 50]         
+           
+          
+         %obj.roiPoints = [670-197,420-120,300,120];
+         %obj.roiPoints = [635-47,385-30,76,25]; %before Jan26 17
+         obj.roiPoints = [650-47,385-30,76,25];
+            %obj.roiPoints = [980,350,75,300]%vertical direction dipole
             %obj.roiPoints = [320,850,600,480]%vertical direction molasses
         end
         %Manually set the coordinates to the cloud centre
