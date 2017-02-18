@@ -50,8 +50,9 @@ classdef pumpingOptimisation < timeTaggerSpectra
             fitVars.('absorptionCount') = self.absorptionCount;
             fitVars.('probeCount') = self.probeCount;
             fitVars.('backgroundCount') = self.backgroundCount;
-            fitVars.('arbitrary_m_f=1_Population') = self.arbmf1Pop;
-            fitVars.('arbitrary_m_f=2_Population') = self.arbmf2Pop;
+            fitVars.('arbitrary_m_f1_Population') = self.arbmf1Pop;
+            fitVars.('arbitrary_m_f2_Population') = self.arbmf2Pop;
+            fitVars.('arbritrary_tot_Population') = self.arbmf2Pop+self.arbmf1Pop;
             fitVars.('relativePopulation') = self.relativePop;
         end
         function doFitPlot(self)
