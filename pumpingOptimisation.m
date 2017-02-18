@@ -54,6 +54,23 @@ classdef pumpingOptimisation < timeTaggerSpectra
             fitVars.('arbitrary_m_f=2_Population') = self.arbmf2Pop;
             fitVars.('relativePopulation') = self.relativePop;
         end
+        function doFitPlot(self)
+            %Grab seperate peaks and fit lorentzians
+            initcoffs = [2,6,0];
+            [redODmf2,redFreqmf2] = self.getmf2PeakData();
+            initcoffs(3) = self.mf2PeakFreq;
+            mf2Coffs = lsqcurvefit(@self.lorentz,initcoffs,redFreqmf2,redODmf2,[],[],self.opts);
+            initcoffs(3) = self.mf1PeakFreq;
+            [redODmf1,redFreqmf1] = self.getmf1PeakData();
+            mf1Coffs = lsqcurvefit(@self.lorentz,initcoffs,redFreqmf1,redODmf1,[],[],self.opts);
+            figure
+            plot(redFreqmf1,redODmf1,'.')
+            hold all
+            plot(redFreqmf1,self.lorentz(mf1Coffs,redFreqmf1))
+            plot(redFreqmf2,redODmf2,'.')
+            plot(redFreqmf2,self.lorentz(mf2Coffs,redFreqmf2))
+            hold off
+        end
     end
 end
 
