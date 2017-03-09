@@ -52,7 +52,7 @@ classdef timeTaggerODMeasurement < handle
                     %Otherwise figure the absolute time since the window
                     %opened and append it to the dummy vector
                     else
-                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^28-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^28-1)];
+                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^27-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^27-1)];
                     end
                 end
                 %Figure out which tag set the dummy tags belong to and send
