@@ -5,6 +5,12 @@ classdef timeTaggerG2 < handle
         endTags = [];
         channelList = [];
         numShots = 0;
+        g2Matrix = [];
+        %These are tau limits we are interested in for our correlation
+        %function
+        maxEdge = 5e-6;
+        minEdge = -5e-6;
+        binWidth = 50e-9;
     end
     
     methods
@@ -128,61 +134,61 @@ classdef timeTaggerG2 < handle
             scaledCounts = binnedCoincidenceCounts./isNanVec;
             g2 = scaledCounts/totChannel2Counts * sum(self.endTags)*82.3e-12/binWidth;
         end
-        function [midTime,g2] = calculateApproxG2(self,channel1,channel2,binWidth)
-            %These are tau limits we are interested in for our correlation
-            %function
-            maxEdge = 1.5e-6;
-            minEdge = -1.5e-6;
-            edges = [minEdge:binWidth:maxEdge];
-            %This is just the mean time of each bin
-            midTime = mean([edges(1:end-1);edges(2:end)]);
+        function updateG2(self,channel1,channel2)
+            posSteps = floor(self.maxEdge/self.binWidth);
+            negSteps = ceil(self.minEdge/self.binWidth);
             %Variable to hold the total number of counts we recieve from
             %the second channel so we can normalise g2
             totChannel2Counts = 0;
+            totChannel1Counts = 0;
             %Find the tag index for channel 1 & 2
             channel1Index = find(self.channelList == channel1,1);
             channel2Index = find(self.channelList == channel2,1);
             %Loop over each shot
             for j=1:length(self.numShots)
                %Grab tags for given shot and channel
-                channel1Tags = self.tags{j}{channel1Index}*82e-12;
-                channel2Tags = self.tags{j}{channel2Index}*82e-12;
+                channel1Tags = self.tags{j}{channel1Index}*82.3e-12;
+                channel2Tags = self.tags{j}{channel2Index}*82.3e-12;
                 %Update the number of counts from channel 2
                 totChannel2Counts = totChannel2Counts + length(channel2Tags);
+                totChannel1Counts = totChannel1Counts + length(channel1Tags);
                 %Vector to help deal with the finite width of the
                 %measurment window
-                isNanVec = zeros([1,length(edges)-1]);
+                contributingBins = zeros([1,posSteps-negSteps]);
                 %This is the coincidence vector which holds our binned coincidence
                 %counts
-                binnedCoincidenceCounts = zeros([1,length(edges)-1]);
-                channel2hist = histcounts(channel2Tags,[0:binWidth:0.5]);
-                channel1hist = histcounts(channel1Tags,[0:binWidth:0.5]);
-                lowNum = -ceil(minEdge/binWidth);
-                highNum = floor(maxEdge/binWidth);
-                binlist = find(channel1hist>0);
-                %Loop over each data point in channel 1's tag list
-                for i=1:length(binlist)
-                    if(channel1hist(binlist(i)) ~= 0)
-                        if(binlist(i) < lowNum-1)
-                            dummy = channel2hist(1:binlist(i)+highNum)*channel1hist(binlist(i));
-                            binnedCoincidenceCounts(length(isNanVec)-binlist(i)-highNum+1:end) = binnedCoincidenceCounts(length(isNanVec)-binlist(i)-highNum+1:end) + dummy;
-                            isNanVec(length(isNanVec)-binlist(i)-highNum+1:end) = isNanVec(length(isNanVec)-binlist(i)-highNum+1:end) + ones([1,length(dummy)])*channel1hist(binlist(i));
-                        elseif(length(channel1hist)-binlist(i) < highNum)
-                            dummy = channel2hist(binlist(i)-lowNum:end)*channel1hist(binlist(i));
-                            binnedCoincidenceCounts(1:binlist(i)+lowNum) = binnedCoincidenceCounts(1:binlist(i)+lowNum) + dummy;
-                            isNanVec(1:binlist(i)+lowNum) = isNanVec(1:binlist(i)+lowNum) + ones([1,length(dummy)])*channel1hist(binlist(i));
-                        else
-                            binnedCoincidenceCounts = binnedCoincidenceCounts + channel2hist(binlist(i)-lowNum+1:binlist(i)+highNum)*channel1hist(binlist(i));
-                            isNanVec = isNanVec + 1;
-                        end
-                    end
+                binnedCoincidenceCounts = zeros([1,posSteps-negSteps]);
+                channel2hist = histcounts(channel2Tags,[0:self.binWidth:self.endTags(j)*82.3e-12]);
+                channel1hist = histcounts(channel1Tags,[0:self.binWidth:self.endTags(j)*82.3e-12]);
+                % tau=0
+                binnedCoincidenceCounts(-negSteps+1) = sum(channel1hist.*channel2hist);
+                contributingBins(-negSteps+1) = length(channel1hist);
+                % tau<0
+                for i=negSteps:-1
+                    binnedCoincidenceCounts(i-negSteps+1) = sum(channel1hist(-i+1:end).*channel2hist(1:end+i));
+                    contributingBins(i-negSteps+1) = length(channel1hist)+i;
+                end
+                %tau > 0
+                for i=1:posSteps
+                    binnedCoincidenceCounts(i-negSteps+1) = sum(channel1hist(1:end-i).*channel2hist(i+1:end));
+                    contributingBins(i-negSteps+1) = length(channel1hist)-i;
+                end
+                if isempty(self.g2Matrix)
+                    self.g2Matrix = binnedCoincidenceCounts/(totChannel1Counts*totChannel2Counts)*length(channel1hist)^2./contributingBins;
+                else
+                    self.g2Matrix = [self.g2Matrix;binnedCoincidenceCounts/(totChannel1Counts*totChannel2Counts)*length(channel1hist)^2./contributingBins];
                 end
             end
-            %Scale to account for the fact that there are edges to the
-            %measurement window. This also effectively is a devision by the
-            %number of counts in channel 1
-            scaledCounts = binnedCoincidenceCounts./isNanVec;
-            g2 = scaledCounts/totChannel2Counts * sum(self.endTags)*82.3e-12/binWidth;
+        end
+        function [midTime,g2] = getG2(self)
+            posSteps = floor(self.maxEdge/self.binWidth);
+            negSteps = ceil(self.minEdge/self.binWidth);
+            %This is just the mean time of each bin
+            midTime = [negSteps:posSteps]*self.binWidth;
+            g2 = mean(self.g2Matrix);
+        end
+        function clearG2(self)
+            self.g2Matrix = [];
         end
     end
     

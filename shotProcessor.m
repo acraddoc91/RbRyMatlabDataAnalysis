@@ -216,12 +216,18 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         end
         fitDone = true;
         shotStructure.fitType = 'timeTaggerSpectra';
+    elseif strcmp(fitType,'runningG2')
+        fit = runningG2;
+        fit.loadFromFile(filename);
+        fit.runFit();
+        fit.plotG2();
+        shotStructure.fitType = 'runningG2';
     end
     %Write variables gathered from fit to file if necessary
     if writeCalcVarsToFile && fitDone
         outVarNames = fieldnames(shotStructure);
         numVars = length(outVarNames);
-        for i = 1:numVars;
+        for i = 1:numVars
             calcVarName = sprintf('/Calculated Values/%s',char(outVarNames(i)));
             h5create(filename,calcVarName,1);
             h5write(filename,calcVarName,shotStructure.(char(outVarNames(i))));
