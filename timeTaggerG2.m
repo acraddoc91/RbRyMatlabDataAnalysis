@@ -8,8 +8,8 @@ classdef timeTaggerG2 < handle
         g2Matrix = [];
         %These are tau limits we are interested in for our correlation
         %function
-        maxEdge = 5e-6;
-        minEdge = -5e-6;
+        maxEdge = 1.5e-6;
+        minEdge = -1.5e-6;
         binWidth = 50e-9;
     end
     
@@ -31,6 +31,8 @@ classdef timeTaggerG2 < handle
             %And the channel list
             self.channelList = h5read(filename,'/Inform/ChannelList');
             self.endTags = zeros([self.numShots,1]);
+            %Expand tag array size
+            self.tags = cell([self.numShots],1);
             %Loop over the number of shots
             for i=1:self.numShots
                 %Need to recast i as a 16 bit number because Matlab will
@@ -65,8 +67,6 @@ classdef timeTaggerG2 < handle
                 for k=1:length(self.channelList)
                     dummy2{k}(isnan(dummy2{k}(:,1)),:)=[];
                 end
-                %Expand tag array size
-                self.tags = cell([self.numShots],1);
                 %Append tag vectors to tag cell array
                 self.tags{i} = dummy2;
                 %And work out end time for window
@@ -137,47 +137,53 @@ classdef timeTaggerG2 < handle
         function updateG2(self,channel1,channel2)
             posSteps = floor(self.maxEdge/self.binWidth);
             negSteps = ceil(self.minEdge/self.binWidth);
-            %Variable to hold the total number of counts we recieve from
-            %the second channel so we can normalise g2
-            totChannel2Counts = 0;
-            totChannel1Counts = 0;
             %Find the tag index for channel 1 & 2
             channel1Index = find(self.channelList == channel1,1);
             channel2Index = find(self.channelList == channel2,1);
+            tempG2Mat = zeros([self.numShots,posSteps-negSteps+1]);
             %Loop over each shot
-            for j=1:length(self.numShots)
+            for j=1:self.numShots
                %Grab tags for given shot and channel
                 channel1Tags = self.tags{j}{channel1Index}*82.3e-12;
                 channel2Tags = self.tags{j}{channel2Index}*82.3e-12;
-                %Update the number of counts from channel 2
-                totChannel2Counts = totChannel2Counts + length(channel2Tags);
-                totChannel1Counts = totChannel1Counts + length(channel1Tags);
-                %Vector to help deal with the finite width of the
-                %measurment window
-                contributingBins = zeros([1,posSteps-negSteps]);
-                %This is the coincidence vector which holds our binned coincidence
-                %counts
-                binnedCoincidenceCounts = zeros([1,posSteps-negSteps]);
-                channel2hist = histcounts(channel2Tags,[0:self.binWidth:self.endTags(j)*82.3e-12]);
-                channel1hist = histcounts(channel1Tags,[0:self.binWidth:self.endTags(j)*82.3e-12]);
-                % tau=0
-                binnedCoincidenceCounts(-negSteps+1) = sum(channel1hist.*channel2hist);
-                contributingBins(-negSteps+1) = length(channel1hist);
-                % tau<0
-                for i=negSteps:-1
-                    binnedCoincidenceCounts(i-negSteps+1) = sum(channel1hist(-i+1:end).*channel2hist(1:end+i));
-                    contributingBins(i-negSteps+1) = length(channel1hist)+i;
-                end
-                %tau > 0
-                for i=1:posSteps
-                    binnedCoincidenceCounts(i-negSteps+1) = sum(channel1hist(1:end-i).*channel2hist(i+1:end));
-                    contributingBins(i-negSteps+1) = length(channel1hist)-i;
-                end
-                if isempty(self.g2Matrix)
-                    self.g2Matrix = binnedCoincidenceCounts/(totChannel1Counts*totChannel2Counts)*length(channel1hist)^2./contributingBins;
+                %Check to see if either tags list is empty
+                if (~isempty(channel1Tags))&&(~isempty(channel2Tags))
+                    %Update the number of counts from channel 2
+                    %Variable to hold the total number of counts we recieve from
+                    %the second channel so we can normalise g2
+                    totChannel2Counts = length(channel2Tags);
+                    totChannel1Counts = length(channel1Tags);
+                    %Vector to help deal with the finite width of the
+                    %measurment window
+                    contributingBins = zeros([1,posSteps-negSteps+1]);
+                    %This is the coincidence vector which holds our binned coincidence
+                    %counts
+                    binnedCoincidenceCounts = zeros([1,posSteps-negSteps+1]);
+                    channel2hist = histcounts(channel2Tags,[0:self.binWidth:self.endTags(j)*82.3e-12]);
+                    channel1hist = histcounts(channel1Tags,[0:self.binWidth:self.endTags(j)*82.3e-12]);
+                    % tau=0
+                    binnedCoincidenceCounts(-negSteps+1) = sum(channel1hist.*channel2hist);
+                    contributingBins(-negSteps+1) = length(channel1hist);
+                    % tau<0
+                    for i=negSteps:-1
+                        binnedCoincidenceCounts(i-negSteps+1) = sum(channel1hist(-i+1:end).*channel2hist(1:end+i));
+                        contributingBins(i-negSteps+1) = length(channel1hist)+i;
+                    end
+                    %tau > 0
+                    for i=1:posSteps
+                        binnedCoincidenceCounts(i-negSteps+1) = sum(channel1hist(1:end-i).*channel2hist(i+1:end));
+                        contributingBins(i-negSteps+1) = length(channel1hist)-i;
+                    end
+                    tempG2Mat(j,:) = binnedCoincidenceCounts/(totChannel1Counts*totChannel2Counts)*length(channel1hist)^2./contributingBins;
+                %Just ignore that line  
                 else
-                    self.g2Matrix = [self.g2Matrix;binnedCoincidenceCounts/(totChannel1Counts*totChannel2Counts)*length(channel1hist)^2./contributingBins];
+                    tempG2Mat(j,:) = NaN([1,posSteps-negSteps+1]);
                 end
+            end
+            if (isempty(self.g2Matrix))
+                self.g2Matrix = tempG2Mat;
+            else
+                self.g2Matrix = [self.g2Matrix;tempG2Mat];
             end
         end
         function [midTime,g2] = getG2(self)
@@ -185,7 +191,7 @@ classdef timeTaggerG2 < handle
             negSteps = ceil(self.minEdge/self.binWidth);
             %This is just the mean time of each bin
             midTime = [negSteps:posSteps]*self.binWidth;
-            g2 = mean(self.g2Matrix);
+            g2 = nanmean(self.g2Matrix);
         end
         function clearG2(self)
             self.g2Matrix = [];

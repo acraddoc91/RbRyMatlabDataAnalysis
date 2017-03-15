@@ -2,7 +2,8 @@ classdef runningG2 < timeTaggerG2
     %This class will persist and build up a running G2 over many data files
     
     properties
-        filenameList = [];
+        filenameList = {};
+        shotsProcessed = 0;
     end
     
     methods
@@ -16,7 +17,7 @@ classdef runningG2 < timeTaggerG2
         end
         function loadFromFile(self,filename)
             loadFromFile@timeTaggerG2(self,filename);
-            self.filenameList = [self.filenameList,filename];
+            self.filenameList = {self.filenameList,filename};
         end
         function updateAllPairwiseG2(self)
             for i=1:length(self.channelList)-1
@@ -29,6 +30,7 @@ classdef runningG2 < timeTaggerG2
             self.updateAllPairwiseG2();
             %Save runningG2 to base workspace
             assignin('base','runningG2obj',self);
+            self.shotsProcessed = self.shotsProcessed + 1
         end
         function plotG2(self)
             [time,g2] = self.getG2();
