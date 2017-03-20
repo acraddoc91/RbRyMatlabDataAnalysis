@@ -17,7 +17,7 @@ classdef runningG2 < timeTaggerG2
         end
         function loadFromFile(self,filename)
             loadFromFile@timeTaggerG2(self,filename);
-            self.filenameList = {self.filenameList,filename};
+            self.filenameList{end+1} = filename;
         end
         function updateAllPairwiseG2(self)
             for i=1:length(self.channelList)-1
