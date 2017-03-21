@@ -123,6 +123,7 @@ classdef timeTaggerG2 < handle
             for j=1:length(self.numShots)
                 endTimes = double(self.endTags{j})*82.3e-12;
                 startTimes = double(self.startTags{j})*82.3e-12;
+                length(endTimes)
                 histEdges = [0:self.binWidth:endTimes(end)];
                 %Make the histograms for channel 1 and channel 2
                 channel1hist = int32(histcounts(double(self.tags{j}{channel1Index})*82.3e-12,histEdges));
@@ -149,7 +150,7 @@ classdef timeTaggerG2 < handle
                 for i = negSteps:posSteps
                     % tau < 0
                     if i < 0
-                        self.g2numerator(i-negSteps+1) = self.g2numerator(i-negSteps+1) + sum(maskedChannel1hist(-i+1:end).*maskedChannel2hist(1:end+i))* (2*self.pulseCorrDist+1);
+                        self.g2numerator(i-negSteps+1) = self.g2numerator(i-negSteps+1) + sum(maskedChannel1hist(-i+1:end).*maskedChannel2hist(1:end+i))* (2*self.pulseCorrDist);
                         for k=-self.pulseCorrDist:self.pulseCorrDist
                             if k < 0
                                 self.g2denominator(i-negSteps+1) = self.g2denominator(i-negSteps+1) + sum(maskedChannel1hist(-k*binPulseSpacing+1-i:end).*maskedChannel2hist(1:end+k*binPulseSpacing+i));
@@ -159,7 +160,7 @@ classdef timeTaggerG2 < handle
                         end
                     % tau > 0
                     elseif i > 0
-                        self.g2numerator(i-negSteps+1) = self.g2numerator(i-negSteps+1) + sum(maskedChannel1hist(1:end-i).*maskedChannel2hist(i+1:end))* (2*self.pulseCorrDist+1);
+                        self.g2numerator(i-negSteps+1) = self.g2numerator(i-negSteps+1) + sum(maskedChannel1hist(1:end-i).*maskedChannel2hist(i+1:end))* (2*self.pulseCorrDist);
                         for k=-self.pulseCorrDist:self.pulseCorrDist
                             if k < 0
                                 self.g2denominator(i-negSteps+1) = self.g2denominator(i-negSteps+1) + sum(maskedChannel1hist(-k*binPulseSpacing+1-i:end).*maskedChannel2hist(1:end+k*binPulseSpacing+i));
@@ -169,7 +170,7 @@ classdef timeTaggerG2 < handle
                         end
                     % tau = 0
                     elseif i == 0
-                        self.g2numerator(i-negSteps+1) = self.g2numerator(i-negSteps+1) + sum(maskedChannel1hist.*maskedChannel2hist) * (2*self.pulseCorrDist+1);
+                        self.g2numerator(i-negSteps+1) = self.g2numerator(i-negSteps+1) + sum(maskedChannel1hist.*maskedChannel2hist) * (2*self.pulseCorrDist);
                         for k=-self.pulseCorrDist:self.pulseCorrDist
                             if k < 0
                                 self.g2denominator(-negSteps+1) = self.g2denominator(-negSteps+1) + sum(maskedChannel1hist(-k*binPulseSpacing+1:end).*maskedChannel2hist(1:end+k*binPulseSpacing));
@@ -187,6 +188,23 @@ classdef timeTaggerG2 < handle
             %This is just the mean time of each bin
             midTime = [negSteps:posSteps]*self.binWidth;
             g2 = self.g2numerator./self.g2denominator;
+        end
+        function [midTime,g2,foldedNumerator,foldedDenominator] = getFoldedG2(self)
+            posSteps = floor(self.maxEdge/self.binWidth);
+            negSteps = ceil(self.minEdge/self.binWidth);
+            %Fold the numerator and denominator
+            foldedNumerator = zeros(1,posSteps+1);
+            foldedDenominator = zeros(1,posSteps+1);
+            %For tau = 0
+            foldedNumerator(1) = self.g2numerator(-negSteps+1);
+            foldedDenominator(1) = self.g2denominator(-negSteps+1);
+            for i=1:posSteps
+                foldedNumerator(i+1) = self.g2numerator(-negSteps+1+i) + self.g2numerator(-negSteps+1-i);
+                foldedDenominator(i+1) = self.g2denominator(-negSteps+1+i) + self.g2denominator(-negSteps+1-i);
+            end
+            %This is just the mean time of each bin
+            midTime = [0:posSteps]*self.binWidth;
+            g2 = foldedNumerator./foldedDenominator;
         end
     end
 end
