@@ -22,7 +22,7 @@ classdef runningG2 < timeTaggerG2
         function updateAllPairwiseG2(self)
             for i=1:length(self.channelList)-1
                 for j=i+1:length(self.channelList)
-                    self.updateG2(self.channelList(i),self.channelList(j));
+                    self.updateG2Test(self.channelList(i),self.channelList(j));
                 end
             end
         end

@@ -123,7 +123,6 @@ classdef timeTaggerG2 < handle
             for j=1:length(self.numShots)
                 endTimes = double(self.endTags{j})*82.3e-12;
                 startTimes = double(self.startTags{j})*82.3e-12;
-                length(endTimes)
                 histEdges = [0:self.binWidth:endTimes(end)];
                 %Make the histograms for channel 1 and channel 2
                 channel1hist = int32(histcounts(double(self.tags{j}{channel1Index})*82.3e-12,histEdges));
@@ -182,12 +181,57 @@ classdef timeTaggerG2 < handle
                 end
             end
         end
+        function updateG2Test(self,channel1,channel2)
+            posSteps = uint16(floor(self.maxEdge/self.binWidth));
+            negSteps = uint16(-ceil(self.minEdge/self.binWidth));
+            binPulseSpacing = int32(self.pulseSpacing/self.binWidth);
+            %This is just the mean time of each bin
+            midTime = [negSteps:posSteps]*self.binWidth;
+            %Find the tag index for channel 1 & 2
+            channel1Index = find(self.channelList == channel1,1);
+            channel2Index = find(self.channelList == channel2,1);
+            %Make some vectors for the g2 numerator and denominator
+            if isempty(self.g2numerator)
+                self.g2numerator = zeros(1,length(midTime));
+                self.g2denominator = zeros(1,length(midTime));
+            end
+            %Loop over each shot
+            for j=1:length(self.numShots)
+                endTimes = double(self.endTags{j})*82.3e-12;
+                startTimes = double(self.startTags{j})*82.3e-12;
+                histEdges = [0:self.binWidth:endTimes(end)];
+                %Make the histograms for channel 1 and channel 2
+                channel1hist = uint16(histcounts(double(self.tags{j}{channel1Index})*82.3e-12,histEdges));
+                channel2hist = uint16(histcounts(double(self.tags{j}{channel2Index})*82.3e-12,histEdges));
+                %histograms for the start and end times
+                endhist = histcounts(endTimes,histEdges);
+                starthist = histcounts(startTimes,histEdges);
+                %Determine the mask for the data we care about
+                mask = uint16(zeros(1,length(starthist)));
+                flipflop = 0;
+                for i=1:length(mask)
+                    if starthist(i) == 1
+                        flipflop = 1;
+                    end
+                    mask(i) = flipflop;
+                    if endhist(i) == 1
+                        flipflop = 0;
+                    end
+                end
+                %Apply the mask to both channel 1 and 2
+                maskedChannel1hist = uint16(mask.*channel1hist);
+                maskedChannel2hist = uint16(mask.*channel2hist);
+                %Now let's calculate coincidence counts within a pulse
+                self.g2numerator = self.g2numerator + getNumer(maskedChannel1hist,maskedChannel2hist,posSteps,negSteps);
+                self.g2denominator = self.g2denominator + getDenom(maskedChannel1hist,maskedChannel2hist,posSteps,negSteps,binPulseSpacing);
+            end
+        end
         function [midTime,g2] = getG2(self)
             posSteps = floor(self.maxEdge/self.binWidth);
             negSteps = ceil(self.minEdge/self.binWidth);
             %This is just the mean time of each bin
             midTime = [negSteps:posSteps]*self.binWidth;
-            g2 = self.g2numerator./self.g2denominator;
+            g2 = double(self.g2numerator)./double(self.g2denominator)*4;
         end
         function [midTime,g2,foldedNumerator,foldedDenominator] = getFoldedG2(self)
             posSteps = floor(self.maxEdge/self.binWidth);
@@ -204,7 +248,7 @@ classdef timeTaggerG2 < handle
             end
             %This is just the mean time of each bin
             midTime = [0:posSteps]*self.binWidth;
-            g2 = foldedNumerator./foldedDenominator;
+            g2 = foldedNumerator*4./foldedDenominator;
         end
     end
 end
