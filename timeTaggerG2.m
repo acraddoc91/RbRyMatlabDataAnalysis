@@ -233,7 +233,7 @@ classdef timeTaggerG2 < handle
             midTime = [negSteps:posSteps]*self.binWidth;
             g2 = double(self.g2numerator)./double(self.g2denominator)*4;
         end
-        function [midTime,g2,foldedNumerator,foldedDenominator] = getFoldedG2(self)
+        function [midTime,g2,g2err] = getFoldedG2(self)
             posSteps = floor(self.maxEdge/self.binWidth);
             negSteps = ceil(self.minEdge/self.binWidth);
             %Fold the numerator and denominator
@@ -249,6 +249,7 @@ classdef timeTaggerG2 < handle
             %This is just the mean time of each bin
             midTime = [0:posSteps]*self.binWidth;
             g2 = foldedNumerator*4./foldedDenominator;
+            g2err = 4*(foldedNumerator./(foldedDenominator.^2)+(foldedNumerator.^2)./(foldedDenominator.^3)).^(1/2);
         end
     end
 end

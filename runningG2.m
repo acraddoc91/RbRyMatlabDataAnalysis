@@ -33,7 +33,7 @@ classdef runningG2 < timeTaggerG2
             self.shotsProcessed = self.shotsProcessed + 1
         end
         function plotG2(self)
-            [time,g2] = self.getG2();
+            [time,g2] = self.getFoldedG2();
             plot(time,g2);
             ylim([0,1.5])
             xlabel('\tau')
