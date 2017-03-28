@@ -181,13 +181,14 @@ function handles=updateImage(hObject,handles)
             dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
         end
         dummyFit.runFit();
-        [ODDat,freqDat] = dummyFit.getODPlotData(1000);
-        handles.procImageViewer = plot(handles.imageViewer,freqDat,ODDat);
+        [transDat,freqDat] = dummyFit.getTransmissionPlotData(1000);
+        handles.procImageViewer = plot(handles.imageViewer,freqDat,transDat);
         hold all;
         handles.procImageViewer = plot(handles.imageViewer,freqDat,dummyFit.eit(dummyFit.coffs,freqDat));
         hold off;
         xlabel(handles.imageViewer,'Frequency (MHz)');
-        ylabel(handles.imageViewer,'OD');
+        ylabel(handles.imageViewer,'Transmission');
+        ylim([0,1]);
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
         try
             dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
