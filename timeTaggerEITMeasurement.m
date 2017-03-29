@@ -1,7 +1,7 @@
 classdef timeTaggerEITMeasurement < timeTaggerODMeasurement
     
     properties
-        eit = @(coffs,x) (coffs(1)*coffs(2)*(coffs(3)^2*coffs(2)+4*coffs(2)*(coffs(4)-(x-coffs(5))).^2+coffs(3)*coffs(2)^2)./((coffs(3)^2+4*(coffs(4)-(x-coffs(5))).^2).*(coffs(2)^2+4*(x-coffs(5)).^2)+2*(coffs(3)*coffs(2)+4*(coffs(4)-(x-coffs(5))).*(x-coffs(5)))*coffs(6)^2+coffs(6)^4));
+        eit = @(coffs,x) exp(-(coffs(1)*coffs(2)*(coffs(3)^2*coffs(2)+4*coffs(2)*(coffs(4)-(x-coffs(5))).^2+coffs(3)*coffs(2)^2)./((coffs(3)^2+4*(coffs(4)-(x-coffs(5))).^2).*(coffs(2)^2+4*(x-coffs(5)).^2)+2*(coffs(3)*coffs(2)+4*(coffs(4)-(x-coffs(5))).*(x-coffs(5)))*coffs(6)^2+coffs(6)^4)));
         %coffs(1) - OD
         %coffs(2) - Gamma
         %coffs(3) - gamma
@@ -19,9 +19,9 @@ classdef timeTaggerEITMeasurement < timeTaggerODMeasurement
         %Fit EIT function to the histogram data
         function runFit(self)
             %Grab OD histogram data
-            [OD,freq] = self.getODPlotData(1000);
+            [transmission,freq] = self.getTransmissionPlotData(1000);
             self.coffs(5) = (freq(end)-freq(1))/2;
-            self.coffs = lsqcurvefit(self.eit,self.coffs,freq,OD,self.lowerBounds,[],self.opts);
+            self.coffs = lsqcurvefit(self.eit,self.coffs,freq,transmission,self.lowerBounds,[],self.opts);
         end
         %Allows user to set start and end frequency of the spectrum
         function setFreqRange(self,startF,endF)
@@ -49,6 +49,15 @@ classdef timeTaggerEITMeasurement < timeTaggerODMeasurement
             ODTime = -real(log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
             time = mean([edges(1:end-1);edges(2:end)]);
             %Convert time to frequency
+            freq = time/time(end)*(self.endFreq-self.startFreq)+self.startFreq;
+        end
+        function [transmission,freq] = getTransmissionPlotData(self,numBins)
+            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
+            probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
+            absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
+            avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
+            transmission = (absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2);
+            time = mean([edges(1:end-1);edges(2:end)]);
             freq = time/time(end)*(self.endFreq-self.startFreq)+self.startFreq;
         end
     end

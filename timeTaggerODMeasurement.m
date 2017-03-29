@@ -6,6 +6,7 @@ classdef timeTaggerODMeasurement < handle
         probeCount = 0;
         backgroundCount = 0;
         opticalDepth = 0;
+        transmission = 0;
         maxOD = 0;
         probeDetuning = 0; %Probe detuning in MHz
         linewidth = 6.0659 %Rb D2 linewidth in MHz
@@ -72,6 +73,7 @@ classdef timeTaggerODMeasurement < handle
             self.absorptionCount = double(length(self.absorptionTags));
             self.probeCount = double(length(self.probeTags));
             self.backgroundCount = double(length(self.backgroundTags));
+            self.transmission = (self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount);
             self.opticalDepth = -log((self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
             [ODTime,~] = self.getODPlotData();
             self.maxOD = max(ODTime);
@@ -83,7 +85,7 @@ classdef timeTaggerODMeasurement < handle
             fitVars.('probeCount') = self.probeCount;
             fitVars.('backgroundCount') = self.backgroundCount;
             fitVars.('maxOD') = self.maxOD;
-            
+            fitVars.('transmission') = self.transmission;
         end
         %This function takes the time tags and bins them into various time
         %bins it then works out the OD for each time bin and spits that out
