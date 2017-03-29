@@ -353,7 +353,48 @@ function setlistControl_Callback(hObject, eventdata, handles)
 %Prints current image to the base workspace
 function printImageToWorkspace_Callback(hObject, eventdata, handles)
     try
-        assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
+            assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole')
+            assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
+            assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
+            dummyFit = timeTaggerODMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            [ODDat,timeDat] = dummyFit.getODPlotData();
+            assignin('base','ODDat',ODDat);
+            assignin('base','timeDat',timeDat);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
+            dummyFit = timeTaggerEITMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            try
+                dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+            end
+            dummyFit.runFit();
+            [ODDat,freqDat] = dummyFit.getODPlotData(1000);
+            assignin('base','ODDat',ODDat);
+            assignin('base','freqDat',freqDat);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+            dummyFit = timeTaggerDoubleODMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            try
+                dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+            end
+            [ODDat,OD2Dat,freq] = dummyFit.getODPlotData(100);
+            assignin('base','ODDat',ODDat);
+            assignin('base','OD2Dat',OD2Dat);
+            assignin('base','freq',freq);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
+            dummyFit = timeTaggerSpectra;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            try
+                dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+            end
+            [ODDat,freq] = dummyFit.getODPlotData(200);
+            assignin('base','ODDat',ODDat);
+            assignin('base','freq',freq);
+        end
     catch
         msgbox('No image to send to workspace');
     end
