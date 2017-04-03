@@ -1,7 +1,8 @@
 classdef timeTaggerEITMeasurement < timeTaggerODMeasurement
     
     properties
-        eit = @(coffs,x) exp(-(coffs(1)*coffs(2)*(coffs(3)^2*coffs(2)+4*coffs(2)*(coffs(4)-(x-coffs(5))).^2+coffs(3)*coffs(2)^2)./((coffs(3)^2+4*(coffs(4)-(x-coffs(5))).^2).*(coffs(2)^2+4*(x-coffs(5)).^2)+2*(coffs(3)*coffs(2)+4*(coffs(4)-(x-coffs(5))).*(x-coffs(5)))*coffs(6)^2+coffs(6)^4)));
+        %eit = @(coffs,x) exp(-(coffs(1)*coffs(2)*(coffs(3)^2*coffs(2)+4*coffs(2)*(coffs(4)-(x-coffs(5))).^2+coffs(3)*coffs(2)^2)./((coffs(3)^2+4*(coffs(4)-(x-coffs(5))).^2).*(coffs(2)^2+4*(x-coffs(5)).^2)+2*(coffs(3)*coffs(2)+4*(coffs(4)-(x-coffs(5))).*(x-coffs(5)))*coffs(6)^2+coffs(6)^4)));
+        eit = @(coffs,x) exp(-(coffs(1)*coffs(2)*(coffs(3)^2*coffs(2)+4*coffs(2)*(coffs(4)-(x-coffs(5))).^2+coffs(3)*coffs(6)^2)./((coffs(3)^2+4*(coffs(4)-(x-coffs(5))).^2).*(coffs(2)^2+4*(x-coffs(5)).^2)+2*(coffs(3)*coffs(2)+4*(coffs(4)-(x-coffs(5))).*(x-coffs(5)))*coffs(6)^2+coffs(6)^4)));
         %coffs(1) - OD
         %coffs(2) - Gamma
         %coffs(3) - gamma
