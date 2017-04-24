@@ -226,6 +226,42 @@ classdef timeTaggerG2 < handle
                 self.g2denominator = self.g2denominator + getDenom(maskedChannel1hist,maskedChannel2hist,posSteps,negSteps,binPulseSpacing);
             end
         end
+        function updateG2Test2(self,channel1,channel2)
+            posSteps = uint16(floor(self.maxEdge/self.binWidth));
+            negSteps = uint16(-ceil(self.minEdge/self.binWidth));
+            binPulseSpacing = int32(self.pulseSpacing/self.binWidth);
+            %This is just the mean time of each bin
+            midTime = [negSteps:posSteps]*self.binWidth;
+            %Find the tag index for channel 1 & 2
+            channel1Index = find(self.channelList == channel1,1);
+            channel2Index = find(self.channelList == channel2,1);
+            %Make some vectors for the g2 numerator and denominator
+            if isempty(self.g2numerator)
+                self.g2numerator = zeros(1,length(midTime));
+                self.g2denominator = zeros(1,length(midTime));
+            end
+            for j=1:length(self.numShots)
+                %Apply mask
+                maskedChannel1 = self.tags{j}{channel1Index};
+                for i=1:length(maskedChannel1)
+                    if(max((maskedChannel1(i) > self.startTags{j}) == (maskedChannel1(i) < self.endTags{j}))==0)
+                        maskedChannel1(i) = NaN;
+                    end
+                end
+                maskedChannel1(isnan(maskedChannel1),:)=[];
+                maskedChannel2 = self.tags{j}{channel2Index};
+                for i=1:length(maskedChannel2)
+                    if(max((maskedChannel2(i) > self.startTags{j}) == (maskedChannel2(i) < self.endTags{j}))==0)
+                        maskedChannel2(i) = NaN;
+                    end
+                end
+                maskedChannel2(isnan(maskedChannel2),:)=[];
+                channel1bins = uint32(ceil(maskedChannel1*82.3e-12/self.binWidth));
+                channel2bins = uint32(ceil(maskedChannel2*82.3e-12/self.binWidth));
+                self.g2numerator = self.g2numerator + getNumer2(channel1bins,channel2bins,posSteps,negSteps);
+                self.g2denominator = self.g2denominator + getDenom2(channel1bins,channel2bins,posSteps,negSteps,binPulseSpacing);
+            end
+        end
         function [midTime,g2] = getG2(self)
             posSteps = floor(self.maxEdge/self.binWidth);
             negSteps = ceil(self.minEdge/self.binWidth);
@@ -250,6 +286,34 @@ classdef timeTaggerG2 < handle
             midTime = [0:posSteps]*self.binWidth;
             g2 = foldedNumerator*4./foldedDenominator;
             g2err = 4*(foldedNumerator./(foldedDenominator.^2)+(foldedNumerator.^2)./(foldedDenominator.^3)).^(1/2);
+        end
+        function [channel1hist,channel2hist,posSteps,negSteps,binPulseSpacing] = getChannelHist(self,channel1,channel2)
+            posSteps = uint16(floor(self.maxEdge/self.binWidth));
+            negSteps = uint16(-ceil(self.minEdge/self.binWidth));
+            binPulseSpacing = int32(self.pulseSpacing/self.binWidth);
+            %Find the tag index for channel 1 & 2
+            channel1Index = find(self.channelList == channel1,1);
+            channel2Index = find(self.channelList == channel2,1);
+            endTimes = double(self.endTags{1})*82.3e-12;
+            startTimes = double(self.startTags{1})*82.3e-12;
+            histEdges = [0:self.binWidth:endTimes(end)];
+            %Make the histograms for channel 1 and channel 2
+            channel1hist = uint16(histcounts(double(self.tags{1}{channel1Index})*82.3e-12,histEdges));
+            channel2hist = uint16(histcounts(double(self.tags{1}{channel2Index})*82.3e-12,histEdges));
+        end
+        function [channel1bins,channel2bins,posSteps,negSteps,binPulseSpacing] = getChannelBins(self,channel1,channel2)
+            posSteps = uint16(floor(self.maxEdge/self.binWidth));
+            negSteps = uint16(-ceil(self.minEdge/self.binWidth));
+            binPulseSpacing = int32(self.pulseSpacing/self.binWidth);
+            %This is just the mean time of each bin
+            midTime = [negSteps:posSteps]*self.binWidth;
+            %Find the tag index for channel 1 & 2
+            channel1Index = find(self.channelList == channel1,1);
+            channel2Index = find(self.channelList == channel2,1);
+            maskedChannel1 = self.tags{1}{channel1Index};
+            maskedChannel2 = self.tags{1}{channel2Index};
+            channel1bins = uint32(ceil(maskedChannel1*82.3e-12/self.binWidth));
+            channel2bins = uint32(ceil(maskedChannel2*82.3e-12/self.binWidth));
         end
     end
 end
