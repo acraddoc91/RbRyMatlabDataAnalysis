@@ -1,4 +1,5 @@
 #include "mex.h"
+#include <omp.h>
 
 void mexFunction(int nlhs, mxArray* plhs[], int nrgs, const mxArray* prhs[]) {
 	//Our channel arrays
@@ -15,8 +16,10 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrgs, const mxArray* prhs[]) {
 	//Variable to hold our denominator
 	plhs[0] = mxCreateNumericMatrix(1, *posSteps + *negSteps + 1, mxINT16_CLASS, mxREAL);
 	unsigned short int* numer = (unsigned short int*) mxGetData(plhs[0]);
+	int k;
 	//Loop over all tau steps
-	for (int k = -*negSteps; k <= *posSteps; k++) {
+	#pragma omp parallel for
+	for (k = -*negSteps; k <= *posSteps; k++) {
 		//Keep a running total of the coincidence counts
 		int runningTot = 0;
 		mwSize i = 0;
