@@ -242,22 +242,13 @@ classdef timeTaggerG2 < handle
             end
             for j=1:length(self.numShots)
                 %Apply mask
-                maskedChannel1 = self.tags{j}{channel1Index};
-                for i=1:length(maskedChannel1)
-                    if(max((maskedChannel1(i) > self.startTags{j}) == (maskedChannel1(i) < self.endTags{j}))==0)
-                        maskedChannel1(i) = NaN;
-                    end
-                end
-                maskedChannel1(isnan(maskedChannel1),:)=[];
-                maskedChannel2 = self.tags{j}{channel2Index};
-                for i=1:length(maskedChannel2)
-                    if(max((maskedChannel2(i) > self.startTags{j}) == (maskedChannel2(i) < self.endTags{j}))==0)
-                        maskedChannel2(i) = NaN;
-                    end
-                end
-                maskedChannel2(isnan(maskedChannel2),:)=[];
-                channel1bins = uint32(ceil(maskedChannel1*82.3e-12/self.binWidth));
-                channel2bins = uint32(ceil(maskedChannel2*82.3e-12/self.binWidth));
+                maskedChannel1 = transpose(testMask(uint32(self.tags{j}{channel1Index}),uint32(self.startTags{j}),uint32(self.endTags{j})));
+                maskedChannel2 = transpose(testMask(uint32(self.tags{j}{channel2Index}),uint32(self.startTags{j}),uint32(self.endTags{j})));
+                maskedChannel1(maskedChannel1==0)=[];
+                maskedChannel2(maskedChannel2==0)=[];
+                channel1bins = uint32(ceil(double(maskedChannel1)*82.3e-12/self.binWidth));
+                channel2bins = uint32(ceil(double(maskedChannel2)*82.3e-12/self.binWidth));
+                %Update numerator and denominator
                 self.g2numerator = self.g2numerator + getNumer2(channel1bins,channel2bins,posSteps,negSteps);
                 self.g2denominator = self.g2denominator + getDenom2(channel1bins,channel2bins,posSteps,negSteps,binPulseSpacing);
             end
