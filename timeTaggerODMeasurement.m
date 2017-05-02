@@ -96,11 +96,11 @@ classdef timeTaggerODMeasurement < handle
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
-            ODTime = -log(max((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts),0))*(1+(self.probeDetuning/self.linewidth)^2);
+            ODTime = -real(log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
         function [absTimeCounts,midTime] = getAbsPlotData(self)
-            numBins = 100;
+            numBins = 50;
             edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
