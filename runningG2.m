@@ -33,6 +33,13 @@ classdef runningG2 < timeTaggerG2
                 end
             end
         end
+        function updateAllPairwiseG2WithoutCross(self)
+            for i=1:length(self.channelList)-1
+                for j=i+1:length(self.channelList)
+                    self.updateG2WithoutCross(self.channelList(i),self.channelList(j));
+                end
+            end
+        end
         function runFit(self)
             self.updateAllPairwiseG2();
             %Save runningG2 to base workspace
