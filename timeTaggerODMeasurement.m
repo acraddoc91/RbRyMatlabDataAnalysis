@@ -14,6 +14,9 @@ classdef timeTaggerODMeasurement < handle
         probeTags = [];
         backgroundTags = [];
         numShots = 1;
+        userEdge = false;
+        lowEdge = 0e-6;
+        highEdge = 20e-6;
     end
     
     methods
@@ -70,9 +73,15 @@ classdef timeTaggerODMeasurement < handle
         end
         %Calculate the detuning adjusted OD
         function runFit(self)
-            self.absorptionCount = double(length(self.absorptionTags));
-            self.probeCount = double(length(self.probeTags));
-            self.backgroundCount = double(length(self.backgroundTags));
+            if self.userEdge
+                self.absorptionCount = sum(self.getAbsPlotData());
+                self.probeCount = sum(self.getProbePlotData());
+                self.backgroundCount = sum(self.getBackPlotData());
+            else
+                self.absorptionCount = double(length(self.absorptionTags));
+                self.probeCount = double(length(self.probeTags));
+                self.backgroundCount = double(length(self.backgroundTags));
+            end
             self.transmission = (self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount);
             self.opticalDepth = -log((self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
             [ODTime,~] = self.getODPlotData();
@@ -92,7 +101,11 @@ classdef timeTaggerODMeasurement < handle
         %as a column vector (ODTime) along with the mid-time of each bin
         function [ODTime,midTime] = getODPlotData(self)
             numBins = 100;
-            edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+            if  self.userEdge
+                edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
+            else
+                edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+            end
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
@@ -100,9 +113,33 @@ classdef timeTaggerODMeasurement < handle
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
         function [absTimeCounts,midTime] = getAbsPlotData(self)
-            numBins = 50;
-            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
+            numBins = 200;
+            if  self.userEdge
+                edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
+            else
+                edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+            end
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
+            midTime = mean([edges(1:end-1);edges(2:end)]);
+        end
+        function [probeTimeCounts,midTime] = getProbePlotData(self)
+            numBins = 200;
+            if  self.userEdge
+                edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
+            else
+                edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+            end
+            probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
+            midTime = mean([edges(1:end-1);edges(2:end)]);
+        end
+        function [backTimeCounts,midTime] = getBackPlotData(self)
+            numBins = 200;
+            if  self.userEdge
+                edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
+            else
+                edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+            end
+            backTimeCounts = histcounts(double(self.backgroundTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
     end
