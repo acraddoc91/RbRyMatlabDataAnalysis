@@ -14,6 +14,9 @@ classdef timeTaggerODMeasurement < handle
         probeTags = [];
         backgroundTags = [];
         numShots = 1;
+        %Set this to true and the below edges to those desired if you want
+        %to look at a specific time window rather than across all the
+        %measurement time taken
         userEdge = false;
         lowEdge = 0e-6;
         highEdge = 20e-6;
@@ -73,6 +76,7 @@ classdef timeTaggerODMeasurement < handle
         end
         %Calculate the detuning adjusted OD
         function runFit(self)
+            %If user has set own edges
             if self.userEdge
                 self.absorptionCount = sum(self.getAbsPlotData());
                 self.probeCount = sum(self.getProbePlotData());
@@ -112,6 +116,7 @@ classdef timeTaggerODMeasurement < handle
             ODTime = -log(max((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts),0))*(1+(self.probeDetuning/self.linewidth)^2);
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
+        %Bins absorption tags
         function [absTimeCounts,midTime] = getAbsPlotData(self)
             numBins = 200;
             if  self.userEdge
@@ -122,6 +127,7 @@ classdef timeTaggerODMeasurement < handle
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
+        %Bins probe tags
         function [probeTimeCounts,midTime] = getProbePlotData(self)
             numBins = 200;
             if  self.userEdge
@@ -132,6 +138,7 @@ classdef timeTaggerODMeasurement < handle
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
+        %Bins background tags
         function [backTimeCounts,midTime] = getBackPlotData(self)
             numBins = 200;
             if  self.userEdge
