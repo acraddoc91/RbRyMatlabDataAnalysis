@@ -275,8 +275,8 @@ classdef timeTaggerG2 < handle
             end
             %This is just the mean time of each bin
             midTime = [0:posSteps]*self.binWidth;
-            g2 = foldedNumerator*4./foldedDenominator;
-            g2err = 4*(foldedNumerator./(foldedDenominator.^2)+(foldedNumerator.^2)./(foldedDenominator.^3)).^(1/2);
+            g2 = double(foldedNumerator)*4./double(foldedDenominator);
+            g2err = 4*(foldedNumerator.*(foldedDenominator+foldedNumerator)./(foldedDenominator.^3)).^(1/2);
         end
         function [channel1hist,channel2hist,posSteps,negSteps,binPulseSpacing] = getChannelHist(self,channel1,channel2)
             posSteps = uint16(floor(self.maxEdge/self.binWidth));

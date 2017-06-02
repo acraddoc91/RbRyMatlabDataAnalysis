@@ -14,14 +14,14 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrgs, const mxArray* prhs[]) {
 	mwSize numElements1 = mxGetNumberOfElements(prhs[0]);
 	mwSize numElements2 = mxGetNumberOfElements(prhs[1]);
 	//Variable to hold our denominator
-	plhs[0] = mxCreateNumericMatrix(1, *posSteps + *negSteps + 1, mxINT16_CLASS, mxREAL);
-	unsigned short int* numer = (unsigned short int*) mxGetData(plhs[0]);
+	plhs[0] = mxCreateNumericMatrix(1, *posSteps + *negSteps + 1, mxINT32_CLASS, mxREAL);
+	unsigned long int* numer = (unsigned long int*) mxGetData(plhs[0]);
 	int k;
 	//Loop over all tau steps
 	#pragma omp parallel for
 	for (k = -*negSteps; k <= *posSteps; k++) {
 		//Keep a running total of the coincidence counts
-		int runningTot = 0;
+		unsigned long int runningTot = 0;
 		mwSize i = 0;
 		mwSize j = 0;
 		//Loop until we hit the end of one of our vectors
