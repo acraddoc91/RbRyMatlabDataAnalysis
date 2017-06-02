@@ -61,8 +61,8 @@ void mexFunction(int nlhs, mxArray* plhs[], int nrgs, const mxArray* prhs[]){
 	mwSize numElements1 = mxGetNumberOfElements(prhs[0]);
 	mwSize numElements2 = mxGetNumberOfElements(prhs[1]);
 	//Variable to hold our denominator
-	plhs[0] = mxCreateNumericMatrix(1, *posSteps+*negSteps+1, mxINT16_CLASS, mxREAL);
-	unsigned short int* denom = (unsigned short int*) mxGetData(plhs[0]);
+	plhs[0] = mxCreateNumericMatrix(1, *posSteps+*negSteps+1, mxINT32_CLASS, mxREAL);
+	unsigned long int* denom = (unsigned long int*) mxGetData(plhs[0]);
 	if(numElements1 == numElements2){
 		mwSize i;
 		for (i = 0; i < *posSteps + *negSteps + 1; i++) {
