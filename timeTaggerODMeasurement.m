@@ -38,7 +38,7 @@ classdef timeTaggerODMeasurement < handle
                 dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-1));
             end
             %Also grab the starttime vector
-            dummyStart = h5read(filename,'/Tags/StartTag');
+            dummyStart = uint64(h5read(filename,'/Tags/StartTag'));
             %Loop over the number of shots (multiplied by three for
             %absorption)
             for i=1:self.numShots*3
@@ -47,9 +47,9 @@ classdef timeTaggerODMeasurement < handle
                 %with more than 21 shots
                 ip = uint16(i);
                 %Reset highcount to 0
-                highCount = 0;
+                highCount = uint64(0);
                 %Grab the vector from the dummy cell structure
-                dummy3 = cell2mat(dummy(ip));
+                dummy3 = uint64(cell2mat(dummy(ip)));
                 dummy2 = [];
                 %Loop over the number of tags
                 for j=1:length(dummy3)
@@ -60,6 +60,7 @@ classdef timeTaggerODMeasurement < handle
                     %opened and append it to the dummy vector
                     else
                         dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^27-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^27-1)];
+                        %dummy2 = [dummy2,bitshift(highCount,27)];
                     end
                 end
                 %Figure out which tag set the dummy tags belong to and send
