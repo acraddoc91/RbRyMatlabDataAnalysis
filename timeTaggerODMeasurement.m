@@ -123,7 +123,7 @@ classdef timeTaggerODMeasurement < handle
             if  self.userEdge
                 edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
             else
-                edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+                edges = [0:round(double(self.absorptionTags(end))*82.3e-12,5)/numBins:round(double(self.absorptionTags(end))*82.3e-12,5)];
             end
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             midTime = mean([edges(1:end-1);edges(2:end)]);
@@ -148,6 +148,19 @@ classdef timeTaggerODMeasurement < handle
                 edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
             end
             backTimeCounts = histcounts(double(self.backgroundTags)*82.3e-12,edges);
+            midTime = mean([edges(1:end-1);edges(2:end)]);
+        end
+        function [ODTime,midTime] = getTransmissionPlotData(self)
+            numBins = 50;
+            if  self.userEdge
+                edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
+            else
+                edges = [0:round(double(self.probeTags(end))*82.3e-12,5)/numBins:round(double(self.probeTags(end))*82.3e-12,5)];
+            end
+            probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
+            absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
+            avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
+            ODTime = max((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts),0);
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
     end

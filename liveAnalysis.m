@@ -172,16 +172,19 @@ function handles=updateImage(hObject,handles)
             colormap(handles.imageViewer,'gray');
         end
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
-        [ODDat,timeDat] = dummyFit.getODPlotData();
-        handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
+        %[ODDat,timeDat] = dummyFit.getAbsPlotData();
+        %handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
+        [ODDat,timeDat] = dummyFit.getTransmissionPlotData();
+        handles.procImageViewer = plot(handles.imageViewer,timeDat,ODDat);
+        ylim([0,1])
         xlabel(handles.imageViewer,'Time (s)');
-        ylabel(handles.imageViewer,'OD');
+        ylabel(handles.imageViewer,'Abs Counts');
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
         try
             dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
         end
         dummyFit.runFit();
-        [transDat,freqDat] = dummyFit.getTransmissionPlotData(1000);
+        [transDat,freqDat] = dummyFit.getTransmissionPlotData(200);
         handles.procImageViewer = plot(handles.imageViewer,freqDat,transDat);
         hold all;
         handles.procImageViewer = plot(handles.imageViewer,freqDat,dummyFit.eit(dummyFit.coffs,freqDat));
@@ -204,8 +207,11 @@ function handles=updateImage(hObject,handles)
         try
             dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
         end
-        [ODDat,freq] = dummyFit.getODPlotData(400);
-        handles.procImageViewer = plot(handles.imageViewer,freq,ODDat);
+        [ODDat,freq] = dummyFit.getODPlotData(100);
+        %handles.procImageViewer = plot(handles.imageViewer,freq,ODDat);
+        handles.procImageViewer = plot(handles.imageViewer,freq,exp(-ODDat));
+        ylim([0,1])
+        %ylim([0,5])
         xlabel(handles.imageViewer,'Freq (MHz)');
         ylabel(handles.imageViewer,'OD');
     end
@@ -244,13 +250,13 @@ function popoutButton_Callback(hObject, eventdata, handles)
         %If so add new data to current popout figure
         axes(handles.popfigAxes);
         hold all
-        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.','markers',12);
         hold off
     else
         %If not plot a new figure
         handles.popfig = figure;
         handles.popfigAxes = axes;
-        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.','markers',12);
         xlabel(handles.xField,'Interpreter','none');
         ylabel(handles.yField,'Interpreter','none');
         set(handles.popoutButton,'String','Add to pop fig');
@@ -373,7 +379,7 @@ function printImageToWorkspace_Callback(hObject, eventdata, handles)
                 dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
             end
             dummyFit.runFit();
-            [ODDat,freqDat] = dummyFit.getODPlotData(1000);
+            [ODDat,freqDat] = dummyFit.getODPlotData(200);
             assignin('base','ODDat',ODDat);
             assignin('base','freqDat',freqDat);
         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
@@ -406,7 +412,7 @@ function handles = updatePlot(handles)
     handles.xField = char(handles.variables(get(handles.xVar,'Value')));
     handles.yField = char(handles.variables(get(handles.yVar,'Value')));
     %Plot the data with the given x and y fields
-    handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+    handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.','markers',12);
     %Label the graph using the x and y field names
     xlabel(handles.livePlot,handles.xField,'Interpreter','none');
     ylabel(handles.livePlot,handles.yField,'Interpreter','none');

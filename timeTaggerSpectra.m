@@ -12,7 +12,7 @@ classdef timeTaggerSpectra < timeTaggerODMeasurement
         %bins it then works out the OD for each time bin and spits that out
         %as a column vector (ODTime) along with the mid-time of each bin
         function [ODTime,freq] = getODPlotData(self,numBins)
-            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
+            edges = [0:round(double(self.probeTags(end))*82.3e-12,6)/numBins:round(double(self.probeTags(end))*82.3e-12,6)];
             probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
             absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
             avgBackCounts = double(length(self.backgroundTags))/double(length(edges));

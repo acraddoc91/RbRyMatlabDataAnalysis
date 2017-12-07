@@ -30,6 +30,10 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
          magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
          shotStructure.Magnification = str2double(magSplit(2));
      end
+     %Get number of shots
+     try
+         shotStructure.numShots = h5read(filename,'/Inform/Shots');
+     end
      %Get timestamp
      dummyTimeIndex = strfind(splitInformString,'Timestamp');
      timeIndex = find(not(cellfun('isempty', dummyTimeIndex)));
@@ -220,7 +224,7 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         fit = runningG2;
         fit.loadFromFile(filename);
         fit.runFit();
-        fit.plotG2();
+        %fit.plotG2();
         shotStructure.fitType = 'runningG2';
     end
     %Write variables gathered from fit to file if necessary
