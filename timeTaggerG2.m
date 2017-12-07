@@ -10,9 +10,9 @@ classdef timeTaggerG2 < handle
         numShots = 0;
         %These are tau limits we are interested in for our correlation
         %function
-        maxEdge = 1.5e-6;
-        minEdge = -1.5e-6;
-        binWidth = 25e-9;
+        maxEdge = 1.0e-6;
+        minEdge = -1.0e-6;
+        binWidth = 10e-9;
         clockChannel = 2;
         pulseSpacing = 10e-6;
         pulseCorrDist = 2;
@@ -253,12 +253,13 @@ classdef timeTaggerG2 < handle
                 self.g2denominator = self.g2denominator + getDenom2(channel1bins,channel2bins,posSteps,negSteps,binPulseSpacing);
             end
         end
-        function [midTime,g2] = getG2(self)
+        function [midTime,g2,g2err] = getG2(self)
             posSteps = floor(self.maxEdge/self.binWidth);
             negSteps = ceil(self.minEdge/self.binWidth);
             %This is just the mean time of each bin
             midTime = [negSteps:posSteps]*self.binWidth;
             g2 = double(self.g2numerator)./double(self.g2denominator)*4;
+            g2err = 4*(double(self.g2numerator).*(double(self.g2denominator)+double(self.g2numerator))./(double(self.g2denominator).^3)).^(1/2);
         end
         function [midTime,g2,g2err] = getFoldedG2(self)
             posSteps = floor(self.maxEdge/self.binWidth);
@@ -301,10 +302,18 @@ classdef timeTaggerG2 < handle
             %Find the tag index for channel 1 & 2
             channel1Index = find(self.channelList == channel1,1);
             channel2Index = find(self.channelList == channel2,1);
-            maskedChannel1 = self.tags{1}{channel1Index};
-            maskedChannel2 = self.tags{1}{channel2Index};
-            channel1bins = uint32(ceil(maskedChannel1*82.3e-12/self.binWidth));
-            channel2bins = uint32(ceil(maskedChannel2*82.3e-12/self.binWidth));
+            %Apply mask
+            maskedChannel1 = transpose(testMask(uint32(self.tags{1}{channel1Index}),uint32(self.startTags{1}),uint32(self.endTags{1})));
+            maskedChannel2 = transpose(testMask(uint32(self.tags{1}{channel2Index}),uint32(self.startTags{1}),uint32(self.endTags{1})));
+            maskedChannel1(maskedChannel1==0)=[];
+            maskedChannel2(maskedChannel2==0)=[];
+            channel1bins = uint32(ceil(double(maskedChannel1)*82.3e-12/self.binWidth));
+            channel2bins = uint32(ceil(double(maskedChannel2)*82.3e-12/self.binWidth));
+        end
+        function dispG2atZero(self)
+            [tau,g2,g2err] = self.getG2();
+            zeroIndex = find(tau==0);
+           	fprintf('g_2(0) = %f ± %f\n',g2(zeroIndex),g2err(zeroIndex));
         end
     end
 end
