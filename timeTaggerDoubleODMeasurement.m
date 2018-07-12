@@ -1,18 +1,30 @@
-classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
-    %Fitting class for two absorption measurement windows
+classdef timeTaggerDoubleODMeasurement < handle
+    %TIMETAGGERDOUBLEOD Summary of this class goes here
+    %   Detailed explanation goes here
     
     properties
-        absorption2Tags = [];
-        absorption2Count = 0;
-        opticalDepth2 = 0;
-        maxOD2 = 0;
-        maxODFraction = 0;
-        startFreq = 0;
-        endFreq = -42;
+        absorptionCount = [0,0];
+        probeCount = [0,0];
+        backgroundCount = [0,0];
+        opticalDepth = 0;
+        transmission = [0,0];
+        maxOD = 0;
+        probeDetuning = 0; %Probe detuning in MHz
+        linewidth = 6.0659 %Rb D2 linewidth in MHz
+        absorptionTags = {};
+        probeTags = {};
+        backgroundTags = {};
+        channelList = [];
+        numShots = 1;
+        %Set this to true and the below edges to those desired if you want
+        %to look at a specific time window rather than across all the
+        %measurement time taken
+        userEdge = false;
+        lowEdge = 0e-6;
+        highEdge = 20e-6;
     end
     
     methods
-        %Grab tags from file
         function loadFromFile(self,filename)
             %Try and grab the number of shots (try included for backward
             %compatibility)
@@ -22,25 +34,35 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
             dummy = {};
             %Read each tag window vector to the dummy cells
             for i=1:self.numShots
-                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*4-4));
-                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*4-3));
-                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*4-2));
-                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*4-1));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-3));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-2));
+                dummy{end+1} = h5read(filename,sprintf('/Tags/TagWindow%i',i*3-1));
             end
+            %And the channel list
+            self.channelList = h5read(filename,'/Inform/ChannelList');
+            %Expand tag array size
+            self.absorptionTags = cell([self.numShots],1);
+            self.probeTags = cell([self.numShots],1);
+            self.backgroundTags = cell([self.numShots],1);
             %Also grab the starttime vector
-            dummyStart = h5read(filename,'/Tags/StartTag');
-            %Loop over the number of shots (multiplied by three for
-            %absorption)
-            for i=1:self.numShots*4
+            dummyStart = uint64(h5read(filename,'/Tags/StartTag'));            
+            %Loop over the number of shots
+            for i=1:self.numShots*3
                 %Need to recast i as a 16 bit number because Matlab will
                 %cast i as an 8 bit one which causes problems for anything
                 %with more than 21 shots
                 ip = uint16(i);
                 %Reset highcount to 0
-                highCount = 0;
+                highCount = uint64(0);
                 %Grab the vector from the dummy cell structure
-                dummy3 = cell2mat(dummy(ip));
-                dummy2 = [];
+                dummy3 = uint64(cell2mat(dummy(ip)));
+                %Pre-allocate size here to make things quicker later
+                dummy2 = cell(length(self.channelList),1);
+                for k=1:length(self.channelList)
+                    %Initialise each channels tag vector to be a NaN vector
+                    %the same length as the total number of tags
+                    dummy2{k} = NaN([length(dummy3),1]);
+                end
                 %Loop over the number of tags
                 for j=1:length(dummy3)
                     %If the tag is a highword up the high count
@@ -49,69 +71,51 @@ classdef timeTaggerDoubleODMeasurement < timeTaggerODMeasurement
                     %Otherwise figure the absolute time since the window
                     %opened and append it to the dummy vector
                     else
-                        dummy2 = [dummy2,bitand(bitshift(dummy3(j),-1),2^27-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^27-1)];
+                        channel = bitand(bitshift(dummy3(j),-29),7)+1;
+                        channelIndex = find(self.channelList == channel,1);
+                        dummy2{channelIndex}(j) = bitand(bitshift(dummy3(j),-1),2^27-1)+bitshift(highCount,27)-bitand(bitshift(dummyStart(2*ip),-1),2^27-1);
                     end
                 end
-                %Figure out which tag set the dummy tags belong to and send
-                %them to the correct vector
-                switch rem(ip,4)
+                %Strip out NaN values from each tag vector
+                for k=1:length(self.channelList)
+                    dummy2{k}(isnan(dummy2{k}(:,1)),:)=[];
+                end
+                %Append tag vectors to tag cell array
+                switch rem(i,3)
                     case 1
-                        self.absorptionTags = [self.absorptionTags,dummy2];
-                    case 2 
-                        self.absorption2Tags = [self.absorption2Tags,dummy2];
-                    case 3
-                        self.probeTags = [self.probeTags,dummy2];
+                        self.absorptionTags = dummy2;
+                    case 2
+                        self.probeTags = dummy2;
                     case 0
-                        self.backgroundTags = [self.backgroundTags,dummy2];
+                        self.backgroundTags = dummy2;
                 end
             end
         end
-        %This function takes the time tags and bins them into various time
-        %bins it then works out the OD for each time bin and spits that out
-        %as a column vector (ODTime) along with the mid-time of each bin
-        function [ODTime,OD2Time,freq] = getODPlotData(self,numBins)
-            %numBins = 1000;
-            edges = [0:round(double(self.probeTags(end))*82.3e-12,3)/numBins:round(double(self.probeTags(end))*82.3e-12,3)];
-            probeTimeCounts = histcounts(double(self.probeTags)*82.3e-12,edges);
-            absTimeCounts = histcounts(double(self.absorptionTags)*82.3e-12,edges);
-            abs2TimeCounts = histcounts(double(self.absorption2Tags)*82.3e-12,edges);
-            avgBackCounts = double(length(self.backgroundTags))/double(length(edges));
-            ODTime = -real(log((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
-            OD2Time = -real(log((abs2TimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts))*(1+(self.probeDetuning/self.linewidth)^2));
-            midTime = mean([edges(1:end-1);edges(2:end)]);
-            %Convert time to frequency
-            freq = midTime/midTime(end)*(self.endFreq-self.startFreq)+self.startFreq;
-        end
-         %Calculate the detuning adjusted OD
+        %Calculate the detuning adjusted OD
         function runFit(self)
-            self.absorptionCount = double(length(self.absorptionTags));
-            self.probeCount = double(length(self.probeTags));
-            self.backgroundCount = double(length(self.backgroundTags));
-            self.opticalDepth = -log((self.absorptionCount-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
-            [ODTime,OD2Time,~] = self.getODPlotData(20);
-            self.maxOD = max(ODTime);
-            self.absorption2Count = double(length(self.absorption2Tags));
-            self.opticalDepth2 = -log((self.absorption2Count-self.backgroundCount)/(self.probeCount-self.backgroundCount))*(1+(self.probeDetuning/self.linewidth)^2);
-            self.maxOD2 = max(OD2Time);
-            self.maxODFraction = self.maxOD/self.maxOD2;
+            %If user has set own edges
+            self.absorptionCount(1) = double(length(self.absorptionTags{1}));
+            self.absorptionCount(2) = double(length(self.absorptionTags{2}));
+            self.probeCount(1) = double(length(self.probeTags{1}));
+            self.probeCount(2) = double(length(self.probeTags{2}));
+            self.backgroundCount(1) = double(length(self.backgroundTags{1}));
+            self.backgroundCount(2) = double(length(self.backgroundTags{2}));
+            self.transmission = (self.absorptionCount-self.backgroundCount)./(self.probeCount-self.backgroundCount);
         end
         %Export fit variables structure
         function fitVars = getFitVars(self)
-            fitVars.('opticalDepth') = self.opticalDepth;
-            fitVars.('absorptionCount') = self.absorptionCount;
-            fitVars.('probeCount') = self.probeCount;
-            fitVars.('backgroundCount') = self.backgroundCount;
-            fitVars.('maxOD') = self.maxOD;
-            fitVars.('maxOD2') = self.maxOD2;
-            fitVars.('opticalDepth2') = self.opticalDepth2;
-            fitVars.('absorption2Count') = self.absorption2Count;
-            fitVars.('maxODFraction') = self.maxODFraction;
+            fitVars.('absorptionCount1') = self.absorptionCount(1);
+            fitVars.('probeCount1') = self.probeCount(1);
+            fitVars.('backgroundCount1') = self.backgroundCount(1);
+            fitVars.('transmission1') = self.transmission(1);
+            fitVars.('absorptionCount2') = self.absorptionCount(2);
+            fitVars.('probeCount2') = self.probeCount(2);
+            fitVars.('backgroundCount2') = self.backgroundCount(2);
+            fitVars.('transmission2') = self.transmission(2);
+            fitVars.('reltrans') = self.transmission(1)-self.transmission(2);
+            fitVars.('relCount') = self.probeCount(1)-self.probeCount(2);
         end
-        %Allows user to set start and end frequency of the spectrum
-        function setFreqRange(self,startF,endF)
-            self.startFreq=startF;
-            self.endFreq=endF;
-        end
-    end    
+    end
+    
 end
 
