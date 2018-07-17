@@ -114,6 +114,10 @@ classdef timeTaggerDoubleODMeasurement < handle
             fitVars.('transmission2') = self.transmission(2);
             fitVars.('reltrans') = self.transmission(1)-self.transmission(2);
             fitVars.('relCount') = self.probeCount(1)-self.probeCount(2);
+            fitVars.('absorptionCountTot') = sum(self.absorptionCount);
+            fitVars.('probeCountTot') = sum(self.probeCount);
+            fitVars.('backgroundCountTot') = sum(self.backgroundCount);
+            fitVars.('transmissionTot') = (sum(self.absorptionCount)-sum(self.backgroundCount))./(sum(self.probeCount)-sum(self.backgroundCount));
         end
     end
     
