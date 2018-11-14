@@ -34,7 +34,7 @@ classdef runningG2 < timeTaggerG2
             end
         end
         function runFit(self)
-            self.updateAllPairwiseG2();
+            self.updateAllPairwiseG2Test();
             %Save runningG2 to base workspace
             assignin('base','runningG2obj',self);
             self.shotsProcessed = self.shotsProcessed + 1
@@ -45,6 +45,9 @@ classdef runningG2 < timeTaggerG2
             ylim([0,1.5])
             xlabel('\tau')
             ylabel('g^{(2)}(\tau)')
+        end
+        function dispRelevantIndices(self)
+            fprintf('%s\t to \t %s\n', self.filenameList{1},self.filenameList{end});
         end
     end
     

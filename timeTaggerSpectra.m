@@ -3,8 +3,8 @@ classdef timeTaggerSpectra < timeTaggerODMeasurement
     %   Detailed explanation goes here
     
     properties
-        startFreq = 0;
-        endFreq = -42;
+        startFreq = -40;
+        endFreq = 40;
     end
     
     methods

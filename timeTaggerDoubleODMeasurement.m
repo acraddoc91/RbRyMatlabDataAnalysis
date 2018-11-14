@@ -119,6 +119,19 @@ classdef timeTaggerDoubleODMeasurement < handle
             fitVars.('backgroundCountTot') = sum(self.backgroundCount);
             fitVars.('transmissionTot') = (sum(self.absorptionCount)-sum(self.backgroundCount))./(sum(self.probeCount)-sum(self.backgroundCount));
         end
+        function [ODTime,midTime] = getTransmissionPlotData(self)
+            numBins = 40;
+            if  self.userEdge
+                edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
+            else
+                edges = [0:round(double(self.probeTags(1,end))*82.3e-12,5)/numBins:round(double(self.probeTags(1,end))*82.3e-12,5)];
+            end
+            probeTimeCounts = histcounts(double(self.probeTags(1))*82.3e-12,edges);
+            absTimeCounts = histcounts(double(self.absorptionTags(1))*82.3e-12,edges);
+            avgBackCounts = double(length(self.backgroundTags(1)))/double(length(edges));
+            ODTime = max((absTimeCounts-avgBackCounts)./(probeTimeCounts-avgBackCounts),0);
+            midTime = mean([edges(1:end-1);edges(2:end)]);
+        end
     end
     
 end

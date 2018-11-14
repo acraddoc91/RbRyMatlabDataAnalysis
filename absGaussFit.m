@@ -19,7 +19,25 @@ classdef absGaussFit < absorptionImageFitting
     methods
         %Constructor just to set ROI and rotation
         function obj = absGaussFit()
-            %obj.roiPoints = [635-197,380-120,376,205];
+            %obj.roiPoints = [800-45,435-20,90,40];
+            %obj.roiPoints = [659-75,415-25,150,50]; %vertical 26/1/2018
+            %obj.roiPoints = [652-30,437-15,60,30]; %vertical 26/1/2018
+            %obj.roiPoints = [611-40,552-15,80,30]; %vertical 25/2/2018
+            %obj.roiPoints = [618-35,551-15,70,30]; %vertical 6/3/2018
+            %obj.roiPoints = [610-25,551-15,50,30]; %vertical 16/4/2018
+            %obj.roiPoints = [611-30,552-15,60,30]; %26/4/2018
+           %obj.roiPoints = [610-40,545-30,80,60]; %26/4/2018
+           %obj.roiPoints = [595-50,548-40,100,80]; %4/10/2018
+          obj.roiPoints = [605-50,552-40,100,80]; %25/10/2018
+            %obj.roiPoints = [591-40,551-15,80,30];
+            %obj.roiPoints = [614-75,565-25,150,50];
+            %obj.roiPoints = [637-350,442-100,700,200];
+            %obj.roiPoints = [0,432-20,850,40];
+            %obj.roiPoints = [690-50,583-25,100,50]; %horizontal
+       %   obj.roiPoints = [955-80,583-20,160,40]; %side 4/10/2018 last
+            %obj.roiPoints = [833-45,527-11,90,22]; %side 5/3/2018 
+            %obj.roiPoints = [585-75,565-75,150,150]; %side 26/1/2018
+            %obj.roiPoints = [960-75,580-25,150,50]; %horizontal 23/1/2018
             %obj.roiPoints = [5.545100000000000e+02,10.055100000000000e+02,0.889800000000000e+02,0.289800000000000e+02];
         end
         %Manually set the coordinates to the cloud centre
@@ -56,12 +74,12 @@ classdef absGaussFit < absorptionImageFitting
         function runXFit(self)
             cutImage = self.getCutImage;
             [ysiz,~]=size(cutImage);
-            if(self.centreY-10 < 1)
-                xVec = sum(cutImage(1:self.centreY+10,:),1)/(self.centreY+10);
-            elseif(self.centreY+10 > ysiz)
-                xVec = sum(cutImage(self.centreY-10:ysiz,:),1)/(ysiz-self.centreY+10);
+            if(self.centreY-5 < 1)
+                xVec = sum(cutImage(1:self.centreY+5,:),1)/(self.centreY+5);
+            elseif(self.centreY+5 > ysiz)
+                xVec = sum(cutImage(self.centreY-5:ysiz,:),1)/(ysiz-self.centreY+5);
             else
-                xVec = sum(cutImage(self.centreY-10:self.centreY+10,:),1)/21;
+                xVec = sum(cutImage(self.centreY-5:self.centreY+5,:),1)/11;
             end
             self.xCoffs(2) = max(xVec);
             xPix = transpose([1:length(xVec)]);
@@ -75,12 +93,12 @@ classdef absGaussFit < absorptionImageFitting
         function runYFit(self)
             cutImage = self.getCutImage;
             [~,xsiz]=size(cutImage);
-            if(self.centreX-10 < 1)
-                yVec = sum(cutImage(:,1:self.centreX+10),2)/(self.centreX+10);
-            elseif(self.centreX+10 > xsiz)
-                yVec = sum(cutImage(:,self.centreX-10:xsiz),2)/(xsiz-self.centreX+10);
+            if(self.centreX-5 < 1)
+                yVec = sum(cutImage(:,1:self.centreX+5),2)/(self.centreX+5);
+            elseif(self.centreX+5 > xsiz)
+                yVec = sum(cutImage(:,self.centreX-5:xsiz),2)/(xsiz-self.centreX+5);
             else
-                yVec = sum(cutImage(:,self.centreX-10:self.centreX+10),2)/21;
+                yVec = sum(cutImage(:,self.centreX-5:self.centreX+5),2)/11;
             end
             self.yCoffs(2) = max(yVec);
             yPix = [1:length(yVec)];
@@ -99,12 +117,12 @@ classdef absGaussFit < absorptionImageFitting
         function plotX(self)
             cutImage = self.getCutImage;
             [ysiz,~]=size(cutImage);
-            if(self.centreY-10 < 1)
-                xVec = sum(cutImage(1:self.centreY+10,:),1)/(self.centreY+10);
-            elseif(self.centreY+10 > ysiz)
-                xVec = sum(cutImage(self.centreY-10:ysiz,:),1)/(ysiz-self.centreY+10);
+            if(self.centreY-5 < 1)
+                xVec = sum(cutImage(1:self.centreY+5,:),1)/(self.centreY+5);
+            elseif(self.centreY+5 > ysiz)
+                xVec = sum(cutImage(self.centreY-5:ysiz,:),1)/(ysiz-self.centreY+5);
             else
-                xVec = sum(cutImage(self.centreY-10:self.centreY+10,:),1)/21;
+                xVec = sum(cutImage(self.centreY-5:self.centreY+5,:),1)/11;
             end
             spatialVec = self.pixSize/self.magnification * [1:length(xVec)]- self.pixSize/self.magnification * self.centreX;
             plot(spatialVec,xVec,'.')
@@ -120,12 +138,12 @@ classdef absGaussFit < absorptionImageFitting
         function plotY(self)
             cutImage = self.getCutImage;
             [~,xsiz]=size(cutImage);
-            if(self.centreX-10 < 1)
-                yVec = sum(cutImage(:,1:self.centreX+10),2)/(self.centreX+10);
-            elseif(self.centreX+10 > xsiz)
-                yVec = sum(cutImage(:,self.centreX-10:xsiz),2)/(xsiz-self.centreX+10);
+            if(self.centreX-5 < 1)
+                yVec = sum(cutImage(:,1:self.centreX+5),2)/(self.centreX+5);
+            elseif(self.centreX+5 > xsiz)
+                yVec = sum(cutImage(:,self.centreX-5:xsiz),2)/(xsiz-self.centreX+5);
             else
-                yVec = sum(cutImage(:,self.centreX-10:self.centreX+10),2)/21;
+                yVec = sum(cutImage(:,self.centreX-5:self.centreX+5),2)/11;
             end
             spatialVec = self.pixSize/self.magnification * [1:length(yVec)]- self.pixSize/self.magnification * self.centreY;
             plot(spatialVec,yVec,'.')
@@ -152,6 +170,8 @@ classdef absGaussFit < absorptionImageFitting
             fitVars.('calcCentreY_pix') = self.yCoffs(3)+self.roiPoints(2);
             fitVars.('N_atoms') = self.atomNumber;
             fitVars.('rotAngle') = self.rotationAngle;
+            fitVars.('peakODx') = self.xCoffs(1)+self.xCoffs(2);
+            fitVars.('peakODy') = self.yCoffs(1)+self.yCoffs(2);
         end
     end
     

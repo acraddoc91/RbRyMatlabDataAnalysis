@@ -119,7 +119,7 @@ classdef timeTaggerODMeasurement < handle
         end
         %Bins absorption tags
         function [absTimeCounts,midTime] = getAbsPlotData(self)
-            numBins = 200;
+            numBins = 50;
             if  self.userEdge
                 edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
             else
@@ -151,7 +151,7 @@ classdef timeTaggerODMeasurement < handle
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
         function [ODTime,midTime] = getTransmissionPlotData(self)
-            numBins = 50;
+            numBins = 40;
             if  self.userEdge
                 edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
             else

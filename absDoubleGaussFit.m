@@ -29,7 +29,7 @@ classdef absDoubleGaussFit < absorptionImageFitting
             %New ROI for z-axis imaging
             %obj.roiPoints = [400,600,600,300];
             %obj.roiPoints=[635, 670, 80, 50]
-            obj.roiPoints = [625,630,250,80];
+            obj.roiPoints = [745-50,428-30,100,60];
         end
         %Manually set the coordinates to the cloud centre
         function goodPoint = setCentreCoordinates(self,centreXIn,centreYIn)

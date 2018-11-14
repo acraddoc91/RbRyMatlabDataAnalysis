@@ -116,6 +116,25 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         end
         fitDone = true;
         shotStructure.fitType = 'absDipole';
+    elseif strcmp(fitType,'absLineFit')
+        %first let's make a fit object and load the current file to it
+        fit = absLineFit;
+        fit.loadFromFile(filename);
+        try
+            %Calculate atom number
+            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity);
+        catch
+            disp('imagingDetuning or imagingIntensity not set in Setlist')
+        end
+        %Grab the fit variables (specifically the x & y sigmas) and centre
+        %coordinates and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'absLineFit';
     elseif strcmp(fitType,'timeTaggerODMeasurement')
         fit = timeTaggerODMeasurement;
         fit.loadFromFile(filename);
@@ -165,6 +184,7 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         fit.loadFromFile(filename);
         try
             fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+            %fit.setFreqRange(-shotStructure.probeDetuning,shotStructure.probeDetuning);
         end
         fit.runFit();
         %Grab the fit variables and start populating the shotStructure

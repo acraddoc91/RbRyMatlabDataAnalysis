@@ -152,6 +152,8 @@ function handles=updateImage(hObject,handles)
         dummyFit = timeTaggerDoubleODMeasurement;
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
         dummyFit = timeTaggerSpectra;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absLineFit')
+        dummyFit = absLineFit;
     end
     dummyFit.loadFromFile(fullFilename);
     if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')|strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
@@ -161,6 +163,7 @@ function handles=updateImage(hObject,handles)
         if get(handles.colourise,'Value')==1
             %If so plot using default colour palette
             handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
+            %handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [-4,0]);
             set(handles.imageViewer,'xtick',[]);
             set(handles.imageViewer,'ytick',[]);
             colorbar(handles.imageViewer);
@@ -171,6 +174,11 @@ function handles=updateImage(hObject,handles)
             handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
             colormap(handles.imageViewer,'gray');
         end
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absLineFit')
+        plotDat = sum(dummyFit.getCutImage,2);
+        handles.procImageViewer = plot(handles.imageViewer,plotDat);
+        xlabel(handles.imageViewer,'pix');
+        ylabel(handles.imageViewer,'OD');
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
         %[ODDat,timeDat] = dummyFit.getAbsPlotData();
         %handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
@@ -181,10 +189,11 @@ function handles=updateImage(hObject,handles)
         ylabel(handles.imageViewer,'Abs Counts');
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
         try
+            %dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
             dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
         end
         dummyFit.runFit();
-        [transDat,freqDat] = dummyFit.getTransmissionPlotData(200);
+        [transDat,freqDat] = dummyFit.getTransmissionPlotData(50);
         handles.procImageViewer = plot(handles.imageViewer,freqDat,transDat);
         hold all;
         handles.procImageViewer = plot(handles.imageViewer,freqDat,dummyFit.eit(dummyFit.coffs,freqDat));
@@ -193,16 +202,12 @@ function handles=updateImage(hObject,handles)
         ylabel(handles.imageViewer,'Transmission');
         ylim([0,1]);
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
-        try
-            dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
-        end
-        [ODDat,OD2Dat,freq] = dummyFit.getODPlotData(100);
-        handles.procImageViewer = plot(handles.imageViewer,freq,ODDat);
-        hold all;
-        handles.procImageViewer = plot(handles.imageViewer,freq,OD2Dat);
-        hold off;
-        xlabel(handles.imageViewer,'Freq (MHz)');
-        ylabel(handles.imageViewer,'OD');
+        0;
+        %         [ODDat,timeDat] = dummyFit.getTransmissionPlotData();
+%         handles.procImageViewer = plot(handles.imageViewer,timeDat,ODDat);
+%         ylim([0,1])
+%         xlabel(handles.imageViewer,'Time (s)');
+%         ylabel(handles.imageViewer,'Abs Counts');
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
         try
             dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
@@ -369,7 +374,7 @@ function printImageToWorkspace_Callback(hObject, eventdata, handles)
         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
             dummyFit = timeTaggerODMeasurement;
             dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
-            [ODDat,timeDat] = dummyFit.getODPlotData();
+            [ODDat,timeDat] = dummyFit.getTransmissionPlotData();
             assignin('base','ODDat',ODDat);
             assignin('base','timeDat',timeDat);
         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
@@ -382,16 +387,16 @@ function printImageToWorkspace_Callback(hObject, eventdata, handles)
             [ODDat,freqDat] = dummyFit.getODPlotData(200);
             assignin('base','ODDat',ODDat);
             assignin('base','freqDat',freqDat);
-        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
-            dummyFit = timeTaggerDoubleODMeasurement;
-            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
-            try
-                dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
-            end
-            [ODDat,OD2Dat,freq] = dummyFit.getODPlotData(100);
-            assignin('base','ODDat',ODDat);
-            assignin('base','OD2Dat',OD2Dat);
-            assignin('base','freq',freq);
+%         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+%             dummyFit = timeTaggerDoubleODMeasurement;
+%             dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+%             try
+%                 dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+%             end
+%             [ODDat,OD2Dat,freq] = dummyFit.getODPlotData(100);
+%             assignin('base','ODDat',ODDat);
+%             assignin('base','OD2Dat',OD2Dat);
+%             assignin('base','freq',freq);
         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
             dummyFit = timeTaggerSpectra;
             dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);

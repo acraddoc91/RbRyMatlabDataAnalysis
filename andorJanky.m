@@ -3,7 +3,8 @@ classdef andorJanky < basicImageFittingClass
     %   Detailed explanation goes here
     
     properties
-        roi = [569-50,427-50,100,100];
+        %roi = [0,0,1024,1024];
+        roi = [573-50,469-50,100,100];
     end
     
     methods
