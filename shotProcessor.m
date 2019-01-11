@@ -246,6 +246,17 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         fit.runFit();
         %fit.plotG2();
         shotStructure.fitType = 'runningG2';
+    elseif strcmp(fitType,'timeTaggerPulseMeasurement')
+        fit = timeTaggerPulseMeasurement;
+        fit.loadFromFile(filename);
+        fit.runFit();
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        %fit.plotG2();
+        shotStructure.fitType = 'timeTaggerPulseMeasurement';
     end
     %Write variables gathered from fit to file if necessary
     if writeCalcVarsToFile && fitDone

@@ -154,6 +154,8 @@ function handles=updateImage(hObject,handles)
         dummyFit = timeTaggerSpectra;
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absLineFit')
         dummyFit = absLineFit;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+        dummyFit = timeTaggerPulseMeasurement;
     end
     dummyFit.loadFromFile(fullFilename);
     if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')|strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
@@ -219,6 +221,9 @@ function handles=updateImage(hObject,handles)
         %ylim([0,5])
         xlabel(handles.imageViewer,'Freq (MHz)');
         ylabel(handles.imageViewer,'OD');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+        [counts,tau] = dummyFit.getPulsePlotData();
+        handles.procImageViewer = plot(handles.imageViewer,tau,counts);
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
@@ -272,7 +277,7 @@ function popoutButton_Callback(hObject, eventdata, handles)
 %Allows user to load data from file
 function loadFromFile_Callback(hObject, eventdata, handles)
     %Popout listbox to choose fit types
-    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement','absDoubleGaussFit','timeTaggerEITMeasurement'};
+    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement','absDoubleGaussFit','timeTaggerEITMeasurement','timeTaggerPulseMeasurement'};
     [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
     %If fit has been chosen reload data file using selected fit type
     if(fitChosen)
