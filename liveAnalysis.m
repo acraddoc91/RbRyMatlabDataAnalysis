@@ -411,7 +411,19 @@ function printImageToWorkspace_Callback(hObject, eventdata, handles)
             [ODDat,freq] = dummyFit.getODPlotData(200);
             assignin('base','ODDat',ODDat);
             assignin('base','freq',freq);
-        end
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+            dummyFit = timeTaggerPulseMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            [counts,tau] = dummyFit.getPulsePlotData(); %Missing t in get!
+            assignin('base','counts', counts);
+            assignin('base','tau',tau);
+%         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+%             dummyFit = timeTaggerPulseMeasurement;
+%             dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+%             [counts,tau] = dummyFit.getPulsePlotData();
+%             assignin('base','counts_from_liveanalysis',counts);
+%             assignin('base','tau_from_liveanalysis',tau);
+         end
     catch
         msgbox('No image to send to workspace');
     end
