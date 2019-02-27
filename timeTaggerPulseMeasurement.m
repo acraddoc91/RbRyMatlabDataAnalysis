@@ -5,7 +5,7 @@ classdef timeTaggerPulseMeasurement < handle
     properties
         numShots = 1;
         min_time = 0e-6;
-        max_time = 1.0e-6;
+        max_time = 5.0e-6;
         bin_width = 10e-9;
         %experimental_losses = 0.71*0.802*.29;
         experimental_losses = 0.67*0.802*0.12;
@@ -27,6 +27,21 @@ classdef timeTaggerPulseMeasurement < handle
             end
             clock_tags = h5read(filename,'/Tags/ClockTags0');
             high_words = 0;
+            %Try and get channel list to auto update the experimental
+            %losses
+            try
+                channel_list = h5read(filename,'/Inform/ChannelList');
+                %Take the first channel and see what it is
+                switch channel_list(1)
+                    case 3
+                        self.experimental_losses = 0.67*0.98*0.16;
+                    case 5
+                        self.experimental_losses = 0.67*0.98*0.12;
+                    case 8
+                        self.experimental_losses = 0.71*0.98*0.73;
+                    otherwise
+                end
+            end
             for i = 1:length(clock_tags)
                 high_words = high_words + bitand(clock_tags(i), 1);
             end
