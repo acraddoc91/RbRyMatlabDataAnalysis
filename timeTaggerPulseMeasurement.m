@@ -9,6 +9,7 @@ classdef timeTaggerPulseMeasurement < handle
         bin_width = 10e-9;
         %experimental_losses = 0.71*0.802*.29;
         experimental_losses = 0.67*0.802*0.12;
+        background_rate = 0;
         filename = '';
         tot_coinc = 0; 
         cycles_per_shot = 1;
@@ -35,10 +36,13 @@ classdef timeTaggerPulseMeasurement < handle
                 switch channel_list(1)
                     case 3
                         self.experimental_losses = 0.67*0.98*0.16;
+                        self.background_rate = 82.5;
                     case 5
                         self.experimental_losses = 0.67*0.98*0.12;
+                        self.background_rate = 82.5;
                     case 8
                         self.experimental_losses = 0.71*0.98*0.73;
+                        self.background_rate = 9680;
                     otherwise
                 end
             end
@@ -58,8 +62,9 @@ classdef timeTaggerPulseMeasurement < handle
         
         %Export fit variables structure
         function fitVars = getFitVars(self)
-            fitVars.('counts') = self.tot_coinc;
+            fitVars.('counts') = double(self.tot_coinc);
             fitVars.('photons_per_cycle') = self.photons_per_cycle;
+            fitVars.('photons_per_cycle_minus_background') = self.photons_per_cycle - (self.max_time-self.min_time)*self.background_rate;
             fitVars.('max_count') = double(max(self.coinc));
         end
         
