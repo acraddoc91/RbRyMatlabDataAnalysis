@@ -5,7 +5,7 @@ classdef timeTaggerPulseMeasurement < handle
     properties
         numShots = 1;
         min_time = 0e-6;
-        max_time = 5.0e-6;
+        max_time = 1.0e-6;
         bin_width = 10e-9;
         %experimental_losses = 0.71*0.802*.29;
         experimental_losses = 0.67*0.802*0.12;
@@ -14,7 +14,7 @@ classdef timeTaggerPulseMeasurement < handle
         tot_coinc = 0; 
         cycles_per_shot = 1;
         photons_per_cycle = 0;
-        coinc = [];
+        coinc = []; 
         tau = [];
     end
     
@@ -64,7 +64,7 @@ classdef timeTaggerPulseMeasurement < handle
         function fitVars = getFitVars(self)
             fitVars.('counts') = double(self.tot_coinc);
             fitVars.('photons_per_cycle') = self.photons_per_cycle;
-            fitVars.('photons_per_cycle_minus_background') = self.photons_per_cycle - (self.max_time-self.min_time)*self.background_rate;
+            fitVars.('photons_per_cycle_minus_background') = self.photons_per_cycle - (self.max_time-self.min_time)*self.background_rate/self.experimental_losses;
             fitVars.('max_count') = double(max(self.coinc));
         end
         
