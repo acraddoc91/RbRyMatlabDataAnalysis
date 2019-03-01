@@ -5,7 +5,7 @@ classdef timeTaggerPulseMeasurement < handle
     properties
         numShots = 1;
         min_time = 0e-6;
-        max_time = 1.0e-6;
+        max_time = 1.25e-6;
         bin_width = 10e-9;
         %experimental_losses = 0.71*0.802*.29;
         experimental_losses = 0.67*0.802*0.12;
@@ -57,7 +57,7 @@ classdef timeTaggerPulseMeasurement < handle
         %Get the coincidences
         function runFit(self)
             self.tot_coinc = sum(self.coinc);
-            self.photons_per_cycle = double(self.tot_coinc) / self.cycles_per_shot / double(self.numShots) / self.experimental_losses;
+            self.photons_per_cycle = double(self.tot_coinc) / double(self.cycles_per_shot) / double(self.numShots) / double(self.experimental_losses);
         end
         
         %Export fit variables structure
@@ -66,6 +66,7 @@ classdef timeTaggerPulseMeasurement < handle
             fitVars.('photons_per_cycle') = self.photons_per_cycle;
             fitVars.('photons_per_cycle_minus_background') = self.photons_per_cycle - (self.max_time-self.min_time)*self.background_rate/self.experimental_losses;
             fitVars.('max_count') = double(max(self.coinc));
+            fitVars.('TotalCycles') = double(self.cycles_per_shot);
         end
         
         %Get data for printing to live analysis
