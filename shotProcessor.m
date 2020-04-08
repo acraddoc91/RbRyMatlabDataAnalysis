@@ -24,10 +24,16 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
      fileNumSplit = strsplit(char(splitInformString(fileIndex)),'=');
      shotStructure.Index = str2double(fileNumSplit(2));
      %Get magnification
-     dummyMagIndex = strfind(splitInformString,'Magnification');
-     magIndex = find(not(cellfun('isempty', dummyMagIndex)));
-     magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
-     shotStructure.Magnification = str2double(magSplit(2));
+     try
+         dummyMagIndex = strfind(splitInformString,'Magnification');
+         magIndex = find(not(cellfun('isempty', dummyMagIndex)));
+         magSplit = strsplit(char(splitInformString(magIndex(1))),'=');
+         shotStructure.Magnification = str2double(magSplit(2));
+     end
+     %Get number of shots
+     try
+         shotStructure.numShots = h5read(filename,'/Inform/Shots');
+     end
      %Get timestamp
      dummyTimeIndex = strfind(splitInformString,'Timestamp');
      timeIndex = find(not(cellfun('isempty', dummyTimeIndex)));
@@ -110,13 +116,153 @@ function shotStructure = shotProcessor(filename,fitType,writeCalcVarsToFile,writ
         end
         fitDone = true;
         shotStructure.fitType = 'absDipole';
+    elseif strcmp(fitType,'absLineFit')
+        %first let's make a fit object and load the current file to it
+        fit = absLineFit;
+        fit.loadFromFile(filename);
+        try
+            %Calculate atom number
+            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity);
+        catch
+            disp('imagingDetuning or imagingIntensity not set in Setlist')
+        end
+        %Grab the fit variables (specifically the x & y sigmas) and centre
+        %coordinates and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'absLineFit';
+    elseif strcmp(fitType,'timeTaggerODMeasurement')
+        fit = timeTaggerODMeasurement;
+        fit.loadFromFile(filename);
+        if any(strcmp('probeDetuning',fieldnames(shotStructure)))
+            fit.probeDetuning = shotStructure.probeDetuning;
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerODMeasurement';
+    elseif strcmp(fitType,'absDoubleGaussFit')
+        %first let's make a fit object and load the current file to it
+        fit = absDoubleGaussFit;
+        fit.loadFromFile(filename);
+        %automagically find the centre coordinates
+        fit.findCentreCoordinates();
+        fit.runFits();
+        try
+            %Set the imaging system magnification
+            fit.setMagnification(shotStructure.Magnification);
+        catch
+            disp('magnification not set in Setlist')
+        end
+        try
+            %Calculate atom number
+            fit.calculateAtomNumber(shotStructure.ImagingDetuning,shotStructure.ImagingIntensity);
+        catch
+            disp('imagingDetuning or imagingIntensity not set in Setlist')
+        end
+        %Grab the fit variables (specifically the x & y sigmas) and centre
+        %coordinates and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'absDoubleGaussFit';
+    elseif strcmp(fitType,'timeTaggerEITMeasurement')
+        %Make fit object
+        fit = timeTaggerEITMeasurement;
+        fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+            %fit.setFreqRange(-shotStructure.probeDetuning,shotStructure.probeDetuning);
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerEITMeasurement';
+    elseif strcmp(fitType,'timeTaggerDoubleODMeasurement')
+        fit = timeTaggerDoubleODMeasurement;
+        fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerDoubleODMeasurement';
+    elseif strcmp(fitType,'timeTaggerSpectra')
+        fit = timeTaggerSpectra;
+        fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerSpectra';
+    elseif strcmp(fitType,'pumpingOptimisation')
+        fit = pumpingOptimisation;
+        fit.loadFromFile(filename);
+        try
+            fit.setFreqRange(shotStructure.probeStartFreq,shotStructure.probeEndFreq);
+        end
+        fit.runFit();
+        %Grab the fit variables and start populating the shotStructure
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        fitDone = true;
+        shotStructure.fitType = 'timeTaggerSpectra';
+    elseif strcmp(fitType,'runningG2')
+        fit = runningG2;
+        fit.loadFromFile(filename);
+        fit.runFit();
+        %fit.plotG2();
+        shotStructure.fitType = 'runningG2';
+    elseif strcmp(fitType,'timeTaggerPulseMeasurement')
+        fit = timeTaggerPulseMeasurement;
+        fit.loadFromFile(filename);
+        fit.runFit();
+        fitStruct = fit.getFitVars();
+        fitFields = fieldnames(fitStruct);
+        for i = 1:length(fitFields)
+            shotStructure.(char(fitFields(i))) = fitStruct.(char(fitFields(i)));
+        end
+        %fit.plotG2();
+        shotStructure.fitType = 'timeTaggerPulseMeasurement';
     end
-    
     %Write variables gathered from fit to file if necessary
     if writeCalcVarsToFile && fitDone
         outVarNames = fieldnames(shotStructure);
         numVars = length(outVarNames);
-        for i = 1:numVars;
+        for i = 1:numVars
             calcVarName = sprintf('/Calculated Values/%s',char(outVarNames(i)));
             h5create(filename,calcVarName,1);
             h5write(filename,calcVarName,shotStructure.(char(outVarNames(i))));

@@ -1,4 +1,4 @@
-classdef basicFittingClass < handle
+classdef basicImageFittingClass < handle
     %Superclass for all fitting subclasses, should not be used directly but
     %serves as a framework for someone wanting to make their own fitting
     %class

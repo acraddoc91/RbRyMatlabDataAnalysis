@@ -142,23 +142,88 @@ function handles=updateImage(hObject,handles)
         dummyFit = absGaussFit;
     elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole')
         dummyFit = absDipole;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
+        dummyFit = absDoubleGaussFit;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
+        dummyFit = timeTaggerODMeasurement;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
+        dummyFit = timeTaggerEITMeasurement;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+        dummyFit = timeTaggerDoubleODMeasurement;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
+        dummyFit = timeTaggerSpectra;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absLineFit')
+        dummyFit = absLineFit;
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+        dummyFit = timeTaggerPulseMeasurement;
     end
     dummyFit.loadFromFile(fullFilename);
-    handles.processedImage = dummyFit.getCutImage;
-    axes(handles.imageViewer);
-    %See if we want to colourise our image
-    if get(handles.colourise,'Value')==1
-        %If so plot using default colour palette
-        handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
-        set(handles.imageViewer,'xtick',[]);
-        set(handles.imageViewer,'ytick',[]);
-        colorbar(handles.imageViewer);
-        colormap(handles.imageViewer,'jet');
-        axis(handles.imageViewer,'image');
-    else
-        %Otherwise plot using greyscale paletter
-        handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
-        colormap(handles.imageViewer,'gray');
+    if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole') | strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')|strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
+        handles.processedImage = dummyFit.getCutImage;
+        axes(handles.imageViewer);
+        %See if we want to colourise our image
+        if get(handles.colourise,'Value')==1
+            %If so plot using default colour palette
+            handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [0,max(max(handles.processedImage))]);
+            %handles.procImageViewer = imagesc(handles.processedImage,'Parent',handles.imageViewer, [-4,0]);
+            set(handles.imageViewer,'xtick',[]);
+            set(handles.imageViewer,'ytick',[]);
+            colorbar(handles.imageViewer);
+            colormap(handles.imageViewer,'jet');
+            axis(handles.imageViewer,'image');
+        else
+            %Otherwise plot using greyscale paletter
+            handles.procImageViewer = imshow(-handles.processedImage,'InitialMagnification','fit','DisplayRange',[min(min(-handles.processedImage)),max(max(-handles.processedImage))],'Parent',handles.imageViewer);
+            colormap(handles.imageViewer,'gray');
+        end
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absLineFit')
+        plotDat = sum(dummyFit.getCutImage,2);
+        handles.procImageViewer = plot(handles.imageViewer,plotDat);
+        xlabel(handles.imageViewer,'pix');
+        ylabel(handles.imageViewer,'OD');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
+        %[ODDat,timeDat] = dummyFit.getAbsPlotData();
+        %handles.procImageViewer = bar(handles.imageViewer,timeDat,ODDat);
+        [ODDat,timeDat] = dummyFit.getTransmissionPlotData();
+        handles.procImageViewer = plot(handles.imageViewer,timeDat,ODDat);
+        ylim([0,1])
+        xlabel(handles.imageViewer,'Time (s)');
+        ylabel(handles.imageViewer,'Abs Counts');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
+        try
+            %dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+            dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+        end
+        dummyFit.runFit();
+        [transDat,freqDat] = dummyFit.getTransmissionPlotData(50);
+        handles.procImageViewer = plot(handles.imageViewer,freqDat,transDat);
+        hold all;
+        handles.procImageViewer = plot(handles.imageViewer,freqDat,dummyFit.eit(dummyFit.coffs,freqDat));
+        hold off;
+        xlabel(handles.imageViewer,'Frequency (MHz)');
+        ylabel(handles.imageViewer,'Transmission');
+        ylim([0,1]);
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+        0;
+        %         [ODDat,timeDat] = dummyFit.getTransmissionPlotData();
+%         handles.procImageViewer = plot(handles.imageViewer,timeDat,ODDat);
+%         ylim([0,1])
+%         xlabel(handles.imageViewer,'Time (s)');
+%         ylabel(handles.imageViewer,'Abs Counts');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
+        try
+            dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+        end
+        [ODDat,freq] = dummyFit.getODPlotData(100);
+        %handles.procImageViewer = plot(handles.imageViewer,freq,ODDat);
+        handles.procImageViewer = plot(handles.imageViewer,freq,exp(-ODDat));
+        ylim([0,1])
+        %ylim([0,5])
+        xlabel(handles.imageViewer,'Freq (MHz)');
+        ylabel(handles.imageViewer,'OD');
+    elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+        [counts,tau] = dummyFit.getPulsePlotData();
+        handles.procImageViewer = plot(handles.imageViewer,tau,counts);
     end
     set(handles.imageIndexList,'Value',handles.imageIndexAct);
     guidata(hObject,handles);
@@ -182,7 +247,9 @@ function refitButton_Callback(hObject, eventdata, handles)
     %Get number of point to refit and open up the refit gui to do fit
     axes(handles.livePlot);
     refitIndexNum = selectdata('SelectionMode','Closest');
-    fitter(refitIndexNum);
+    if strcmp(handles.shotData(refitIndexNum).fitType,'absGaussFit')|strcmp(handles.shotData(refitIndexNum).fitType,'absDipole')|strcmp(handles.shotData(refitIndexNum).fitType,'absDoubleGaussFit')
+        fitter(refitIndexNum);
+    end
 
 
 %Makes a popout figure from the plot currently being viewed for
@@ -193,13 +260,13 @@ function popoutButton_Callback(hObject, eventdata, handles)
         %If so add new data to current popout figure
         axes(handles.popfigAxes);
         hold all
-        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.','markers',12);
         hold off
     else
         %If not plot a new figure
         handles.popfig = figure;
         handles.popfigAxes = axes;
-        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+        plot([handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.','markers',12);
         xlabel(handles.xField,'Interpreter','none');
         ylabel(handles.yField,'Interpreter','none');
         set(handles.popoutButton,'String','Add to pop fig');
@@ -210,7 +277,7 @@ function popoutButton_Callback(hObject, eventdata, handles)
 %Allows user to load data from file
 function loadFromFile_Callback(hObject, eventdata, handles)
     %Popout listbox to choose fit types
-    fitList = {'absGaussFit','absDipole'};
+    fitList = {'absGaussFit','absDipole','timeTaggerODMeasurement','absDoubleGaussFit','timeTaggerEITMeasurement','timeTaggerPulseMeasurement'};
     [fitIndex,fitChosen] = listdlg('PromptString','Select fit type','SelectionMode','single','ListString',fitList);
     %If fit has been chosen reload data file using selected fit type
     if(fitChosen)
@@ -303,7 +370,60 @@ function setlistControl_Callback(hObject, eventdata, handles)
 %Prints current image to the base workspace
 function printImageToWorkspace_Callback(hObject, eventdata, handles)
     try
-        assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        if strcmp(handles.shotData(handles.imageIndexAct).fitType,'absGaussFit')
+            assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDipole')
+            assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'absDoubleGaussFit')
+            assignin('base','imageFromLiveAnalysis',handles.processedImage);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerODMeasurement')
+            dummyFit = timeTaggerODMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            [ODDat,timeDat] = dummyFit.getTransmissionPlotData();
+            assignin('base','ODDat',ODDat);
+            assignin('base','timeDat',timeDat);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerEITMeasurement')
+            dummyFit = timeTaggerEITMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            try
+                dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+            end
+            dummyFit.runFit();
+            [ODDat,freqDat] = dummyFit.getODPlotData(200);
+            assignin('base','ODDat',ODDat);
+            assignin('base','freqDat',freqDat);
+%         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerDoubleODMeasurement')
+%             dummyFit = timeTaggerDoubleODMeasurement;
+%             dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+%             try
+%                 dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+%             end
+%             [ODDat,OD2Dat,freq] = dummyFit.getODPlotData(100);
+%             assignin('base','ODDat',ODDat);
+%             assignin('base','OD2Dat',OD2Dat);
+%             assignin('base','freq',freq);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerSpectra')
+            dummyFit = timeTaggerSpectra;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            try
+                dummyFit.setFreqRange(handles.shotData(handles.imageIndexAct).probeStartFreq,handles.shotData(handles.imageIndexAct).probeEndFreq);
+            end
+            [ODDat,freq] = dummyFit.getODPlotData(200);
+            assignin('base','ODDat',ODDat);
+            assignin('base','freq',freq);
+        elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+            dummyFit = timeTaggerPulseMeasurement;
+            dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+            [counts,tau] = dummyFit.getPulsePlotData(); %Missing t in get!
+            assignin('base','counts', counts);
+            assignin('base','tau',tau);
+%         elseif strcmp(handles.shotData(handles.imageIndexAct).fitType,'timeTaggerPulseMeasurement')
+%             dummyFit = timeTaggerPulseMeasurement;
+%             dummyFit.loadFromFile(handles.shotData(handles.imageIndexAct).filePath);
+%             [counts,tau] = dummyFit.getPulsePlotData();
+%             assignin('base','counts_from_liveanalysis',counts);
+%             assignin('base','tau_from_liveanalysis',tau);
+         end
     catch
         msgbox('No image to send to workspace');
     end
@@ -314,7 +434,7 @@ function handles = updatePlot(handles)
     handles.xField = char(handles.variables(get(handles.xVar,'Value')));
     handles.yField = char(handles.variables(get(handles.yVar,'Value')));
     %Plot the data with the given x and y fields
-    handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.');
+    handles.currentPlot = plot(handles.livePlot,[handles.shotData.(handles.xField)],[handles.shotData.(handles.yField)],'.','markers',12);
     %Label the graph using the x and y field names
     xlabel(handles.livePlot,handles.xField,'Interpreter','none');
     ylabel(handles.livePlot,handles.yField,'Interpreter','none');

@@ -1,4 +1,4 @@
-classdef absorptionImageFitting < basicFittingClass
+classdef absorptionImageFitting < basicImageFittingClass
     %Class for absorption image fitting
     
     properties
