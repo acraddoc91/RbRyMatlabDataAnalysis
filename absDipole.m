@@ -53,7 +53,8 @@ classdef absDipole < absorptionImageFitting
           %  obj.roiPoints = [719-10,404-10,55,25];
          %obj.roiPoints = [740-40,434-15,80,30];
           %obj.roiPoints = [753-15,434-215,30,430]; %dimple imaging
-          obj.roiPoints = [611-40,552-40,80,80]; %Sandy 4/26/2018 
+          %obj.roiPoints = [611-40,552-40,80,80]; %Sandy 4/26/2018 
+          obj.roiPoints = [602-100,546-40,200,80]; %29/11/2018 current
           % obj.roiPoints = [611-25,552-15,50,30];
         end
         %Manually set the coordinates to the cloud centre

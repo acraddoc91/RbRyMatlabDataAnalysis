@@ -151,7 +151,7 @@ classdef timeTaggerODMeasurement < handle
             midTime = mean([edges(1:end-1);edges(2:end)]);
         end
         function [ODTime,midTime] = getTransmissionPlotData(self)
-            numBins = 40;
+            numBins = 100;
             if  self.userEdge
                 edges = [self.lowEdge:(self.highEdge-self.lowEdge)/numBins:self.highEdge];
             else

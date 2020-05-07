@@ -3,11 +3,18 @@ classdef timeTaggerDoubleODMeasurement < handle
     %   Detailed explanation goes here
     
     properties
-        absorptionCount = [0,0];
-        probeCount = [0,0];
-        backgroundCount = [0,0];
+%         absorptionCount = [0,0];
+%         probeCount = [0,0];
+%         backgroundCount = [0,0];
+%         opticalDepth = 0;
+%         transmission = [0,0];
+        %%%
+        absorptionCount = [0,0,0];
+        probeCount = [0,0, 0];
+        backgroundCount = [0,0, 0];
         opticalDepth = 0;
-        transmission = [0,0];
+        transmission = [0,0, 0];
+        %%%
         maxOD = 0;
         probeDetuning = 0; %Probe detuning in MHz
         linewidth = 6.0659 %Rb D2 linewidth in MHz
@@ -94,16 +101,40 @@ classdef timeTaggerDoubleODMeasurement < handle
         %Calculate the detuning adjusted OD
         function runFit(self)
             %If user has set own edges
+%             self.absorptionCount(1) = double(length(self.absorptionTags{1}));
+%             self.absorptionCount(2) = double(length(self.absorptionTags{2}));
+%             self.probeCount(1) = double(length(self.probeTags{1}));
+%             self.probeCount(2) = double(length(self.probeTags{2}));
+%             self.backgroundCount(1) = double(length(self.backgroundTags{1}));
+%             self.backgroundCount(2) = double(length(self.backgroundTags{2}));
+%             self.transmission = (self.absorptionCount-self.backgroundCount)./(self.probeCount-self.backgroundCount);
             self.absorptionCount(1) = double(length(self.absorptionTags{1}));
             self.absorptionCount(2) = double(length(self.absorptionTags{2}));
+             self.absorptionCount(3) = double(length(self.absorptionTags{3}));
             self.probeCount(1) = double(length(self.probeTags{1}));
             self.probeCount(2) = double(length(self.probeTags{2}));
+            self.probeCount(3) = double(length(self.probeTags{3}));
             self.backgroundCount(1) = double(length(self.backgroundTags{1}));
             self.backgroundCount(2) = double(length(self.backgroundTags{2}));
+            self.backgroundCount(3) = double(length(self.backgroundTags{3}));
             self.transmission = (self.absorptionCount-self.backgroundCount)./(self.probeCount-self.backgroundCount);
         end
         %Export fit variables structure
         function fitVars = getFitVars(self)
+%             fitVars.('absorptionCount1') = self.absorptionCount(1);
+%             fitVars.('probeCount1') = self.probeCount(1);
+%             fitVars.('backgroundCount1') = self.backgroundCount(1);
+%             fitVars.('transmission1') = self.transmission(1);
+%             fitVars.('absorptionCount2') = self.absorptionCount(2);
+%             fitVars.('probeCount2') = self.probeCount(2);
+%             fitVars.('backgroundCount2') = self.backgroundCount(2);
+%             fitVars.('transmission2') = self.transmission(2);
+%             fitVars.('reltrans') = self.transmission(1)-self.transmission(2);
+%             fitVars.('relCount') = self.probeCount(1)-self.probeCount(2);
+%             fitVars.('absorptionCountTot') = sum(self.absorptionCount);
+%             fitVars.('probeCountTot') = sum(self.probeCount);
+%             fitVars.('backgroundCountTot') = sum(self.backgroundCount);
+%             fitVars.('transmissionTot') = (sum(self.absorptionCount)-sum(self.backgroundCount))./(sum(self.probeCount)-sum(self.backgroundCount));
             fitVars.('absorptionCount1') = self.absorptionCount(1);
             fitVars.('probeCount1') = self.probeCount(1);
             fitVars.('backgroundCount1') = self.backgroundCount(1);
@@ -112,6 +143,10 @@ classdef timeTaggerDoubleODMeasurement < handle
             fitVars.('probeCount2') = self.probeCount(2);
             fitVars.('backgroundCount2') = self.backgroundCount(2);
             fitVars.('transmission2') = self.transmission(2);
+            fitVars.('absorptionCount3') = self.absorptionCount(3);
+            fitVars.('probeCount3') = self.probeCount(3);
+            fitVars.('backgroundCount3') = self.backgroundCount(3);
+            fitVars.('transmission3') = self.transmission(3);
             fitVars.('reltrans') = self.transmission(1)-self.transmission(2);
             fitVars.('relCount') = self.probeCount(1)-self.probeCount(2);
             fitVars.('absorptionCountTot') = sum(self.absorptionCount);

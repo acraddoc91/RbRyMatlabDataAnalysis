@@ -5,8 +5,8 @@ classdef timeTaggerPulseMeasurement < handle
     properties
         numShots = 1;
         min_time = 0e-6;
-        max_time = 1.25e-6;
-        bin_width = 10e-9;
+        max_time = 1.5e-6;
+        bin_width = 50e-9;
         %experimental_losses = 0.71*0.802*.29;
         experimental_losses = 0.67*0.802*0.12;
         background_rate = 0;
@@ -35,13 +35,24 @@ classdef timeTaggerPulseMeasurement < handle
                 %Take the first channel and see what it is
                 switch channel_list(1)
                     case 3
-                        self.experimental_losses = 0.67*0.98*0.16;
+                        %before April 8, 2019
+                        %self.experimental_losses = 0.67*0.98*0.16;
+                        %after April 8, 2019
+                        %self.experimental_losses = 0.67*.174*0.98;
+                        %self.experimental_losses = 0.67*.15*0.98; %April 17
+                        self.experimental_losses = 0.67*.17;
                         self.background_rate = 82.5;
                     case 5
-                        self.experimental_losses = 0.67*0.98*0.12;
+                        %before April 8, 2019
+                        %self.experimental_losses = 0.67*0.98*0.12;
+                        %self.experimental_losses = 0.67*.126*0.98;
+                        %self.experimental_losses = 0.67*.109*0.98; %April 17
+                        self.experimental_losses = 0.67*.448; %May 17
                         self.background_rate = 82.5;
                     case 8
-                        self.experimental_losses = 0.71*0.98*0.73;
+                        %not updated April 8, 2019
+                        %self.experimental_losses = 0.71*0.791*.874;
+                        self.experimental_losses = 0.67*.682; %May 17
                         self.background_rate = 9680;
                     otherwise
                 end

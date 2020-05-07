@@ -19,6 +19,7 @@ classdef absGaussFit < absorptionImageFitting
     methods
         %Constructor just to set ROI and rotation
         function obj = absGaussFit()
+           % obj.roiPoints = [600-400,500-300,800,600]; %Molasses 18/3/2019
             %obj.roiPoints = [800-45,435-20,90,40];
             %obj.roiPoints = [659-75,415-25,150,50]; %vertical 26/1/2018
             %obj.roiPoints = [652-30,437-15,60,30]; %vertical 26/1/2018
@@ -28,13 +29,16 @@ classdef absGaussFit < absorptionImageFitting
             %obj.roiPoints = [611-30,552-15,60,30]; %26/4/2018
            %obj.roiPoints = [610-40,545-30,80,60]; %26/4/2018
            %obj.roiPoints = [595-50,548-40,100,80]; %4/10/2018
-          obj.roiPoints = [605-50,552-40,100,80]; %25/10/2018
+           %obj.roiPoints = [605-30,552-15,60,30]; %25/10/2018
+          %obj.roiPoints = [606-35,547-20,70,40]; %29/11/2018
+           obj.roiPoints = [602-50,556-40,100,80]; %29/11/2018 current
+           %obj.roiPoints = [1170-50,524-25,100,50]; %29/11/2018 current-side
             %obj.roiPoints = [591-40,551-15,80,30];
             %obj.roiPoints = [614-75,565-25,150,50];
             %obj.roiPoints = [637-350,442-100,700,200];
             %obj.roiPoints = [0,432-20,850,40];
-            %obj.roiPoints = [690-50,583-25,100,50]; %horizontal
-       %   obj.roiPoints = [955-80,583-20,160,40]; %side 4/10/2018 last
+           %obj.roiPoints = [1382-30,536-15,60,30]; %horizontal 17/5/2019
+       % obj.roiPoints = [1270-50,580-20,100,40]; %side 27/2/2019 last
             %obj.roiPoints = [833-45,527-11,90,22]; %side 5/3/2018 
             %obj.roiPoints = [585-75,565-75,150,150]; %side 26/1/2018
             %obj.roiPoints = [960-75,580-25,150,50]; %horizontal 23/1/2018
@@ -74,12 +78,12 @@ classdef absGaussFit < absorptionImageFitting
         function runXFit(self)
             cutImage = self.getCutImage;
             [ysiz,~]=size(cutImage);
-            if(self.centreY-5 < 1)
-                xVec = sum(cutImage(1:self.centreY+5,:),1)/(self.centreY+5);
-            elseif(self.centreY+5 > ysiz)
-                xVec = sum(cutImage(self.centreY-5:ysiz,:),1)/(ysiz-self.centreY+5);
+            if(self.centreY-2 < 1)
+                xVec = sum(cutImage(1:self.centreY+2,:),1)/(self.centreY+2);
+            elseif(self.centreY+2 > ysiz)
+                xVec = sum(cutImage(self.centreY-2:ysiz,:),1)/(ysiz-self.centreY+2);
             else
-                xVec = sum(cutImage(self.centreY-5:self.centreY+5,:),1)/11;
+                xVec = sum(cutImage(self.centreY-2:self.centreY+2,:),1)/5;
             end
             self.xCoffs(2) = max(xVec);
             xPix = transpose([1:length(xVec)]);
